@@ -25,6 +25,7 @@ class Seq2Seq_rnn(object):
         -> trg_map_i2c (HashMap<Integer, Token> | None): Mapping from integers to tokens for target language 
         -> dim_embed_trg (int): Size of the embeddings for the decoder
         -> num_neurons_encoder (int): Number of neurons in the encoder
+        -> optim(class): Optimizer used to train the parameters within the model
         -> num_neurons_decoder (int): Number of neurons in the decoder 
     """ 
     def __init__(self,  
@@ -35,16 +36,17 @@ class Seq2Seq_rnn(object):
                 trg_map_i2c= None, 
                 dim_embed_trg=256, 
                 num_neurons_encoder=512, 
-                num_neurons_decoder=512):
+                num_neurons_decoder=512,
+                optim = GradientDescentMomentum):
         # for the decoder, we're going to tie the weights of the embedding layer and the linear projection
         # before softmax activation. If vocab_size_src and vocab_size_trg are same as well, its possible to tie all
         # the weights but not done here for simplicity of implementation . See: https://arxiv.org/abs/1608.05859
         self.src_dim = vocab_size_src
         self.trg_map_i2c = trg_map_i2c
         self.src_map_i2c = src_map_i2c
-        self.Encoder = Encoder(vocab_size_src, dim_embed_src, num_neurons_encoder)
-        self.Decoder = Decoder(vocab_size_trg, dim_embed_trg, num_neurons_decoder)
-        self.cost_function = crossEntropy
+        self.optim = optim 
+        self.Encoder = Encoder(vocab_size_src, dim_embed_src, num_neurons_encoder, optim)
+        self.Decoder = Decoder(vocab_size_trg, dim_embed_trg, num_neurons_decoder, optim)
 
 
     def _forward(self, x,y, mask_src, mask_trg, loss_func):
@@ -67,18 +69,18 @@ class Seq2Seq_rnn(object):
             every vector in the batch 
         """
         encoded_batch = self.Encoder(x, mask_src)
-        predictions, loss = self.Decoder(encoded_batch, y, mask_trg, self.cost_function)
-        return predictions, loss 
+        loss = self.Decoder(encoded_batch, y, mask_trg)
+        return loss 
 
 
-    def _backward(self, predictions, mask_src, mask_trg, optim, learn_rate):
+    def _backward(self, mask_src, mask_trg, learn_rate):
         """
         This method computes the backward pass through the network.
         """
         # vector containing the gradient dL/dA for the encoded vector produced at last time
         # step for encoder 
-        dA_encodedVector = self.Decoder._backward(predictions, mask_trg, optim, learn_rate)
-        self.Encoder._backward(dA_encodedVector, mask_src, optim, learn_rate)
+        dA_encodedVector = self.Decoder._backward(mask_trg, learn_rate)
+        self.Encoder._backward(dA_encodedVector, mask_src, learn_rate)
 
 
 
@@ -91,7 +93,6 @@ class Seq2Seq_rnn(object):
             learn_rate = 0.3, 
             learning_schedule = None, 
             num_epochs=100, 
-            optim=GradientDescentMomentum, 
             verbose =1):
         """
         This method is used to train the seq2seq rnn model in batches. This method expects the data
@@ -117,9 +118,7 @@ class Seq2Seq_rnn(object):
             -> learn_rate (int): Integer representing learning rate used to update parameters
             -> learning_schedule (Function | None): Schedule used to update the learning rate throughout training
             -> num_epochs (int): Number of epochs to train the model for
-            -> optim(object): Optimizer used to train the parameters within the model
         """ 
-        optim = optim()
         training_losses = [] 
         validation_losses = [] 
         smoothLossTrain = smoothLoss() 
@@ -140,8 +139,8 @@ class Seq2Seq_rnn(object):
                 mask_src = getMask(src_train)
                 mask_trg = getMask(trg_train)
 
-                predictions, loss = self._forward(src_train, trg_train, mask_src, mask_trg)
-                self._backward(predictions, mask_src, mask_trg, optim, learn_rate)
+                loss = self._forward(src_train, trg_train, mask_src, mask_trg)
+                self._backward(mask_src, mask_trg, self.optim, learn_rate)
                 
                 if learning_schedule:
                     learn_rate = learning_schedule(learn_rate, epoch)
@@ -179,8 +178,8 @@ class Seq2Seq_rnn(object):
             
 
         return training_losses, validation_losses
-            
 
+            
     def predict(self, inp_seq):
         """
         This method carries out translation from a source language to a target language
