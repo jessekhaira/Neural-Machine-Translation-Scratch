@@ -2,6 +2,6 @@
 
 -- In progress -- 
 
-This is an implementation of a batched recurrent neural network(RNN) in NumPy utilizing an encoder and decoder architecture used for the task of machine translation. 
+This is an implementation of a sequence to sequence batched recurrent neural network(RNN) from scratch, just utilizing the library NumPy. 
 
-The purpose of the repo was to learn how RNNs can train in batches even though they have a sequential architecture, how masking works in RNNs, along with how the encoder-decoder architecture of the RNN is used for machine translation.  
+The purpose of the repo was to deepen my understanding of recurrent neural networks by implementing the architecture of a sequence to sequence model from scratch. 
