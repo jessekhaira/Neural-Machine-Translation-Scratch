@@ -1,7 +1,8 @@
 .vscode/
 .DS_Store
-.ipynb_checkpoints/test_batched_mt_rnn-checkpoint.ipynb
+.ipynb_checkpoints
 
 venv/
 
 train.csv
+valid.csv

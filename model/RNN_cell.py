@@ -144,7 +144,6 @@ class RNN_cell(Layer):
         Outputs:
             -> None | 
         """
-        #
         dW_embed = np.zeros_like(self.embedding_layer.W)
         dWaa = np.zeros_like()
 
@@ -153,6 +152,4 @@ class RNN_cell(Layer):
     def _backwardNoPredict(self, learn_rate, mask = None):
         """
         """
-        
-        
-
+        pass 
