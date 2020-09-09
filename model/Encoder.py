@@ -16,21 +16,17 @@ class Encoder(object):
     """
     def __init__(self, vocab_size_src, dim_embed_src, num_neurons_encoder, optim):
         self.embedding_layer = Embedding_layer(dim_in = vocab_size_src, embed_dim=dim_embed_src, optim=optim)
-        self.rnn_cell = RNN_cell(dim_in = dim_embed_src, num_neurons = num_neurons_encoder, optim = optim)
+        self.rnn_cell = RNN_cell(dim_in = dim_embed_src, num_neurons = num_neurons_encoder, optim = optim, embedding_layer = self.embedding_layer)
     
     def __call__(self, x, mask):
-        # Shape: (M, T, dim_embed_src)
-        embedded_tensor = self.embedding_layer._forward(x)
         # Shape: (M, num_neurons_encoder)
-        encoded_matrix = self.rnn_cell._forward(embedded_tensor, mask)
+        encoded_matrix = self.rnn_cell._forward(x, mask=mask)
         return encoded_matrix
 
 
     def _backward(self, dA_encodedVector, mask, learn_rate):
         # Shape: (M, dim_embed_src)
-        dZ = self.rnn_cell._backward(dA_encodedVector, mask, learn_rate)
-        self.embedding_layer._backward(dZ, learn_rate)
-    
+        self.rnn_cell._backward(dA_encodedVector, mask=mask, learn_rate=learn_rate)    
 
 
 

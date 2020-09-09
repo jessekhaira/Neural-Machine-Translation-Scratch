@@ -23,7 +23,7 @@ class Seq2Seq_rnn(object):
         -> dim_embed_src (int): Size of the embeddings for the encoder 
         -> src_map_i2c (HashMap<Integer, Token> | None): Mapping from integers to tokens for source language
         -> trg_map_i2c (HashMap<Integer, Token> | None): Mapping from integers to tokens for target language 
-        -> dim_embed_trg (int): Size of the embeddings for the decoder
+        -> dim_embed_trg (int): Size of the embeddings for the decoder. Kep t
         -> num_neurons_encoder (int): Number of neurons in the encoder
         -> optim(class): Optimizer used to train the parameters within the model
         -> num_neurons_decoder (int): Number of neurons in the decoder 
@@ -31,16 +31,14 @@ class Seq2Seq_rnn(object):
     def __init__(self,  
                 vocab_size_src, 
                 vocab_size_trg, 
-                dim_embed_src=256, 
+                dim_embed_src=512, 
                 src_map_i2c = None, 
                 trg_map_i2c= None, 
-                dim_embed_trg=256, 
+                dim_embed_trg=512, 
                 num_neurons_encoder=512, 
                 num_neurons_decoder=512,
                 optim = GradientDescentMomentum):
-        # for the decoder, we're going to tie the weights of the embedding layer and the linear projection
-        # before softmax activation. If vocab_size_src and vocab_size_trg are same as well, its possible to tie all
-        # the weights but not done here for simplicity of implementation . See: https://arxiv.org/abs/1608.05859
+        assert dim_embed_trg == num_neurons_decoder, "For weight tying, the number of neurons in the decoder has to be the same as the number of dimensions in the embedding"
         self.src_dim = vocab_size_src
         self.trg_map_i2c = trg_map_i2c
         self.src_map_i2c = src_map_i2c
@@ -81,7 +79,6 @@ class Seq2Seq_rnn(object):
         # step for encoder 
         dA_encodedVector = self.Decoder._backward(mask_trg, learn_rate)
         self.Encoder._backward(dA_encodedVector, mask_src, learn_rate)
-
 
 
     def train(self, 
@@ -126,7 +123,9 @@ class Seq2Seq_rnn(object):
         for epoch in tqdm(range(num_epochs)):
             epoch_loss = []
             for i, batch in enumerate(data_loader):
+                # Shape (M,T_src)
                 src_train = batch.src_name
+                # Shape (M,T_trg)
                 trg_train = batch.trg_name 
                 
                 # convert torch tensors to numpy
@@ -196,6 +195,10 @@ class Seq2Seq_rnn(object):
         decoded_vector = self.Decoder(encoded_vector)
         xfunc = np.vectorize(lambda x: self.trg_map_i2c[x])
         return xfunc(decoded_vector)
+
+
+    def _beamSearch(self, inp_seq):
+        pass 
 
 
 

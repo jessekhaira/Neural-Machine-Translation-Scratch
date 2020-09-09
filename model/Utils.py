@@ -30,6 +30,10 @@ class GradientDescentMomentum(object):
             for param in params:
                 self.running_avgs.append(np.zeros_like(param))
         
+        if grad_clip:
+            for dparam in dparams:
+                np.clip(dparam, -5, 5, out=dparam)
+        
         output_params = [] 
         for i,param, dparam, running_avg in zip(range(len(params)),params, dparams, self.running_avgs):
             running_avg = self.b1*running_avg + (1-self.b1)*dparam
@@ -37,9 +41,6 @@ class GradientDescentMomentum(object):
             self.running_avgs[i] = running_avg
             output_params.append(param)
         
-        if grad_clip:
-            for param in output_params:
-                np.clip(param, -0.2, 0.2, out=param)
         return output_params if len(output_params) >1 else output_params[0]
 
 
@@ -73,12 +74,17 @@ def crossEntropy(y,yhat, mask = None):
         - int representing the loss 
     """
     loss = -np.log(yhat[np.arange(yhat.shape[0]), y])
-    return np.sum(loss,axis=0) if mask is None else np.sum(mask.astype(int)*loss,axis=0)
+    # number of examples in the input is equivalent to the number of non-padding vectors if we have a mask 
+    batch_size = y.shape[0] if mask is None else np.sum(mask)
+    return np.sum(loss,axis=0)/batch_size if mask is None else np.sum(mask.astype(int)*loss,axis=0)/batch_size
 
 
 def softmax(matrix_in):
     return np.exp(matrix_in)/np.sum(np.exp(matrix_in), axis=1, keepdims=True)
 
-def getMask(vector, mask_idx):
-    return vector != mask_idx
+
+def getMask(vector, pad_idx):
+    # True - include this vector when computing loss, updating gradients and 
+    # calculating activations as the idx is not equal to the pad_idx 
+    return vector != pad_idx
 
