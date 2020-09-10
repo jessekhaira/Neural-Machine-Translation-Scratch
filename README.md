@@ -2,6 +2,7 @@
 
 -- In progress -- 
 
-This is an implementation of a sequence to sequence batched recurrent neural network(RNN) with weight tying from the ground up, just utilizing the library NumPy. 
+This is an implementation of a batched recurrent neural network(RNN) from scratch with NumPy. Weight tying is utilized within this model, where the input embedding layer and the linear projection before the softmax layer use the same weights. 
 
-The purpose of the repo was to gain a deeper understanding of recurrent neural networks by implementing the architecture of a sequence to sequence model from scratch.
+
+
