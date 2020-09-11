@@ -7,15 +7,16 @@ from Utils import smoothLoss
 import torch 
 import numpy as np 
 from tqdm import tqdm
+from collections import deque 
 
 class Seq2Seq_rnn(object):
     """
     This class represents a sequence to sequence model used for the task of machine translation, trained
     in batches. 
 
-    The architecture is quite simple: we feed in an input sequence in a source language, and get an encoded
+    The architecture is as follows: we feed in an input sequence in a source language to the encoder, and get an encoded
     vector from the encoder. We feed that encoded vector into a decoder network which will output predictions
-    of the word it thinks is the most likely.
+    of the word it thinks is the most likely in the target language. 
 
     Inputs:
         -> vocab_size_src (int): Size of the source language vocabulary
@@ -39,6 +40,9 @@ class Seq2Seq_rnn(object):
                 num_neurons_decoder=512,
                 optim = GradientDescentMomentum):
         assert dim_embed_trg == num_neurons_decoder, "For weight tying, the number of neurons in the decoder has to be the same as the number of dimensions in the embedding"
+        # These don't have to be equal. If they aren't, you will need an additional weight matrix after the encoder to project down or up to the 
+        # dimensionality of the decoder, adding extra complexity. Kept symmetric for simplicities sake
+        assert num_neurons_decoder == num_neurons_encoder, "Currently this model only supports symmetric decoders and encoders"
         self.src_dim = vocab_size_src
         self.trg_map_i2c = trg_map_i2c
         self.src_map_i2c = src_map_i2c
@@ -66,8 +70,8 @@ class Seq2Seq_rnn(object):
             -> predictions (NumPy matrix): Matrix containing the probabilistic predictions for 
             every vector in the batch 
         """
-        encoded_batch = self.Encoder(x, mask_src)
-        loss = self.Decoder(encoded_batch, y, mask_trg)
+        _, _, encoded_batch = self.Encoder(x, mask_src)
+        _, loss, _ = self.Decoder(encoded_batch, y, mask_trg)
         return loss 
 
 
@@ -179,26 +183,36 @@ class Seq2Seq_rnn(object):
         return training_losses, validation_losses
 
             
-    def predict(self, inp_seq):
+    def predict(self, inp_seq, eos_int, sos_int, length_normalization = 0.75, beam_width=3, max_seq_len = 20):
         """
         This method carries out translation from a source language to a target language
-        when given a vector of integers in the source language (that belong to the same vocabulary
+        when given a vector of integers in the source language (that should belong to the same vocabulary
         as the network was trained on). 
+
+        This method utilizes the (greedy) beam search algorithm to determine the highest probability
+        sentence that can be output from the architecture. 
+
+        Candidate solutions have their probabilities normalized by their length to solve the problem 
+        of outputting overly short sentences as described in: https://arxiv.org/pdf/1609.08144.pdf. 
 
         Inputs:
             -> inp_seq (NumPy vector): Vector of shape (1, t) where t indicates time steps. 
+            -> eos_int (int): Integer representing the index which the end of sequence token occupies 
+            -> sos_int (int): Integer representing the index which the start of sequence token occupies
+            -> beam_width (int): Integer representing the size of the beam to use during the search
+            -> length_normalization (int): Integer indicating the factor by which to normalize the probabilities
+            of the candidate solutions by their length
+            -> max_seq_len (int): Integer representing the maximum number of time steps the decoder will unfold 
+            when generating a sentence 
         Outputs:
             -> String containing the decoded vector by the network 
         """
         assert max(inp_seq) < self.src_dim, "The sequence has to belong to the same vocabulary as the model was trained on!"
-        encoded_vector = self.Encoder(inp_seq)
-        decoded_vector = self.Decoder(encoded_vector)
-        xfunc = np.vectorize(lambda x: self.trg_map_i2c[x])
-        return xfunc(decoded_vector)
+        _ , _ , encoded = self.Encoder(inp_seq, None)
+        return self.Decoder._beamSearch(encoded, eos_int, sos_int, length_normalization, beam_width, max_seq_len)
+        
+    
 
-
-    def _beamSearch(self, inp_seq):
-        pass 
 
 
 

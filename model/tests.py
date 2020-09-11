@@ -56,15 +56,6 @@ class tests(unittest.TestCase):
         output = obj._forward(inp_seq)
         self.assertEqual(output.shape, (2,5,3))
 
-    def test_embed_backward(self):
-        inp_seq = np.array([[3,2,1,4]])
-        obj = Embedding_layer(5, 3, GradientDescentMomentum)
-        obj.x = inp_seq 
-        dZ = np.array([[0.3, 0.2,0.1], [-0.1, 0.2, 0.3], [0.3, 0.2, 0.7], [0.1,0.5,0.6]])
-        obj._backward(dZ, 0.2)
-        
-
-
 
 
 

@@ -19,15 +19,16 @@ class Encoder(object):
         self.rnn_cell = RNN_cell(dim_in = dim_embed_src, num_neurons = num_neurons_encoder, optim = optim, embedding_layer = self.embedding_layer)
     
     def __call__(self, x, mask):
-        # Shape: (M, num_neurons_encoder)
-        encoded_matrix = self.rnn_cell._forward(x, mask=mask)
+        # Shape: (M, num_neurons_encoder) containing activations that hopefully encode
+        # all the words in every sequence in the source language well
+        _ ,_ ,encoded_matrix = self.rnn_cell._forward(x, mask=mask)
         return encoded_matrix
 
 
     def _backward(self, dA_encodedVector, mask, learn_rate):
         # Shape: (M, dim_embed_src)
-        self.rnn_cell._backward(dA_encodedVector, mask=mask, learn_rate=learn_rate)    
-
+        self.rnn_cell._backward(gradient_ahead=dA_encodedVector, mask=mask, learn_rate=learn_rate)    
+        
 
 
         
