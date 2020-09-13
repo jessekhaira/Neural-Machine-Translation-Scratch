@@ -80,6 +80,8 @@ def crossEntropy(y,yhat, mask = None):
 
 
 def softmax(matrix_in):
+    # numerically stable - subtract the largest value of the logits off before softmaxing 
+    matrix_in -= matrix_in.max(axis=1, keepdims=True)
     return np.exp(matrix_in)/np.sum(np.exp(matrix_in), axis=1, keepdims=True)
 
 

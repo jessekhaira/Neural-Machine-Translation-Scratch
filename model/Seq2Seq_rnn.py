@@ -19,6 +19,8 @@ class Seq2Seq_rnn(object):
     of the word it thinks is the most likely in the target language. 
 
     Inputs:
+        -> eos_int (int): Integer representing the index which the end of sequence token occupies 
+        -> sos_int (int): Integer representing the index which the start of sequence token occupies
         -> vocab_size_src (int): Size of the source language vocabulary
         -> vocab_size_trg (int): Size of the target language vocabulary
         -> dim_embed_src (int): Size of the embeddings for the encoder 
@@ -32,6 +34,8 @@ class Seq2Seq_rnn(object):
     def __init__(self,  
                 vocab_size_src, 
                 vocab_size_trg, 
+                eos_int,
+                sos_int,
                 dim_embed_src=512, 
                 src_map_i2c = None, 
                 trg_map_i2c= None, 
@@ -49,6 +53,8 @@ class Seq2Seq_rnn(object):
         self.optim = optim 
         self.Encoder = Encoder(vocab_size_src, dim_embed_src, num_neurons_encoder, optim)
         self.Decoder = Decoder(vocab_size_trg, dim_embed_trg, num_neurons_decoder, optim)
+        self.eos_int = eos_int
+        self.sos_int = sos_int
 
 
     def _forward(self, x,y, mask_src, mask_trg, loss_func):
@@ -70,22 +76,22 @@ class Seq2Seq_rnn(object):
             -> predictions (NumPy matrix): Matrix containing the probabilistic predictions for 
             every vector in the batch 
         """
-        _, _, encoded_batch = self.Encoder(x, mask_src)
-        _, loss, _ = self.Decoder(encoded_batch, y, mask_trg)
+        encoded_batch = self.Encoder(x, mask_src)
+        loss = self.Decoder(encoded_batch, y, mask_trg)
         return loss 
 
 
-    def _backward(self, mask_src, mask_trg, learn_rate):
+    def _backward(self, learn_rate):
         """
         This method computes the backward pass through the network.
         """
         # vector containing the gradient dL/dA for the encoded vector produced at last time
         # step for encoder 
-        dA_encodedVector = self.Decoder._backward(mask_trg, learn_rate)
-        self.Encoder._backward(dA_encodedVector, mask_src, learn_rate)
+        dA_encodedVector = self.Decoder._backward(learn_rate)
+        self.Encoder._backward(dA_encodedVector, learn_rate)
 
 
-    def train(self, 
+    def train (self, 
             data_loader, 
             src_name, 
             trg_name, 
@@ -162,14 +168,10 @@ class Seq2Seq_rnn(object):
                     src = batch.src_name
                     trg = batch.trg_name
 
-                    if i%10 ==0:
-                        src_ints = src[0].reshape(1,-1)
-                        trg_ints = self.predict(src_ints)
-                        map_src_i2c = np.vectorize(lambda x: self.src_map_i2c[x])
-                        map_trg_i2c = np.vectorize(lambda x: self.trg_map_i2c[x])
-                        src_sentence = map_src_i2c(src_ints)
-                        trg_sentence = map_trg_i2c(trg_ints)
-                        print('Src sentece:%s, Trg sentence predicted: %s'%(src_sentence, trg_sentence))
+                    if i%100 ==0 and verbose:
+                        input_sentence = "".join(list(map(lambda x: self.src_map_i2c[x], src[0])))
+                        predicted = self.predict(src[0])
+                        print('Epoch %s, input_sentence %s: translated sentence %s:'%(i, input_sentence, predicted))
 
                     _, loss = self.forward(src, trg)
                     batch_losses.append(loss)
@@ -183,7 +185,7 @@ class Seq2Seq_rnn(object):
         return training_losses, validation_losses
 
             
-    def predict(self, inp_seq, eos_int, sos_int, length_normalization = 0.75, beam_width=3, max_seq_len = 20):
+    def predict(self, inp_seq, length_normalization = 0.75, beam_width=3, max_seq_len = 20):
         """
         This method carries out translation from a source language to a target language
         when given a vector of integers in the source language (that should belong to the same vocabulary
@@ -197,8 +199,6 @@ class Seq2Seq_rnn(object):
 
         Inputs:
             -> inp_seq (NumPy vector): Vector of shape (1, t) where t indicates time steps. 
-            -> eos_int (int): Integer representing the index which the end of sequence token occupies 
-            -> sos_int (int): Integer representing the index which the start of sequence token occupies
             -> beam_width (int): Integer representing the size of the beam to use during the search
             -> length_normalization (int): Integer indicating the factor by which to normalize the probabilities
             of the candidate solutions by their length
@@ -207,9 +207,11 @@ class Seq2Seq_rnn(object):
         Outputs:
             -> String containing the decoded vector by the network 
         """
-        assert max(inp_seq) < self.src_dim, "The sequence has to belong to the same vocabulary as the model was trained on!"
-        _ , _ , encoded = self.Encoder(inp_seq, None)
-        return self.Decoder._beamSearch(encoded, eos_int, sos_int, length_normalization, beam_width, max_seq_len)
+        assert inp_seq.max() < self.src_dim, "The sequence has to belong to the same vocabulary as the model was trained on!"
+        encoded = self.Encoder(inp_seq, None)
+        output_ints = self.Decoder.beamSearch(encoded, self.eos_int, self.sos_int, length_normalization, beam_width, max_seq_len)
+        output_sentence = list(map(lambda x: self.trg_map_i2c[x], output_ints))
+        return "".join(output_sentence)
         
     
 

@@ -25,9 +25,9 @@ class Encoder(object):
         return encoded_matrix
 
 
-    def _backward(self, dA_encodedVector, mask, learn_rate):
+    def _backward(self, dA_encodedVector, learn_rate):
         # Shape: (M, dim_embed_src)
-        self.rnn_cell._backward(gradient_ahead=dA_encodedVector, mask=mask, learn_rate=learn_rate)    
+        self.rnn_cell._backward(gradient_ahead=dA_encodedVector, learn_rate=learn_rate)    
         
 
 

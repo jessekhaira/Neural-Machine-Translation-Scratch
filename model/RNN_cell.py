@@ -3,7 +3,7 @@ import numpy as np
 from Utils import softmax
 from collections import OrderedDict
 from collections import deque 
-
+import copy 
 class RNN_cell(Layer):
     """
     This class represents a basic recurrent neural network cell utilizing the tanh
@@ -24,6 +24,7 @@ class RNN_cell(Layer):
     def __init__(self, dim_in, num_neurons, optim, embedding_layer, predict=False, costFunction=None):
         self.embedding_layer = embedding_layer
         self.Waa, self.Wax, self.ba = self._initWeights(dim_in,num_neurons) 
+        self.predict = predict 
         if self.predict:
             self.bay = np.zeros((1, self.embedding_layer.W.shape[0]))
         # Ordered dict needed to cache values at every time step for backprop in the order the timesteps occur 
@@ -36,11 +37,11 @@ class RNN_cell(Layer):
     def _initWeights(self, dim_in, num_neurons):
         # rnn cell weights - produces activations of shape (M, num_neurons)
         ba = np.zeros((1, num_neurons))
-        Wax = np.random.randn(dim_in, num_neurons)
-        Waa = np.random.randn(num_neurons, num_neurons)
+        Wax = np.random.randn(dim_in, num_neurons) * 0.01
+        Waa = np.random.randn(num_neurons, num_neurons) * 0.01
         return Waa, Wax, ba
 
-    def _forward(self, x, y = None, a_prev = None, mask = None):
+    def _forward(self, x, y = None, a_prev = None, mask = None, beam = False):
         """
         This method carries out the forward pass through an RNN.
 
@@ -62,7 +63,10 @@ class RNN_cell(Layer):
             in x or None
             -> a_prev (NumPy Matrix | None): Matrix of activations from the previous timestep 
             -> mask (NumPy Matrix | None): Matrix of integers of shape (M,T) indicating which indices belong to padding
-            vectors or None. 
+            vectors or None.
+            -> beam (boolean): Boolean indicating whether we are using forward pass to carry out a beam search. In beam search,
+            we only care that sequences that have already ended output a probability distribution over the vocab of 0's so they
+            wont be considered when finishing off the remaining beams. 
             
             So mask[0] corresponds to a sequence of integers for the first example, and if a value is False
             within this row, that means the vector this idx corresponds to is a padding vector. 
@@ -79,7 +83,7 @@ class RNN_cell(Layer):
         # and a big reason why transformers are more efficient 
 
         # shape (M, num_neurons)
-        if not a_prev: 
+        if a_prev is None: 
             a_prev = np.zeros((x.shape[0], self.Waa.shape[0]))
         loss = 0 
         probabilities = None 
@@ -91,14 +95,14 @@ class RNN_cell(Layer):
             curr_timestep_x = self.embedding_layer._forward(pre_embedded_inp_t)
 
             curr_timestep_labels = None 
-            if y:
+            if y is not None:
                 # Shape (M,)
                 curr_timestep_labels = y[:, t]
 
             curr_mask = None 
-            if mask:
-                # Shape (M,)
-                curr_mask = mask[:, t]
+            if mask is not None:
+                # Shape (M,) - if shape is already good then work with it as is 
+                curr_mask = mask if len(mask.shape) == 1 else mask[:,t]
 
             # Shape (M, num_neurons)
             activation_timestep = np.tanh(curr_timestep_x.dot(self.Wax) + a_prev.dot(self.Waa) + self.ba)
@@ -110,9 +114,9 @@ class RNN_cell(Layer):
                 logits = self.embedding_layer._weightTied_Softmax(activation_timestep, self.bay)
                 # Shape (M, d_vocab)
                 probabilities_t = softmax(logits)
-                if curr_timestep_labels:
+                if curr_timestep_labels is not None:
                     # Scalar 
-                    loss_t = self.costFunction(curr_timestep_labels, probabilities_t, mask = mask)
+                    loss_t = self.costFunction(curr_timestep_labels, probabilities_t, mask = curr_mask)
                     # total loss is accumulated over every timestep
                     loss += loss_t 
             
@@ -121,9 +125,10 @@ class RNN_cell(Layer):
 
             # In our get_mask function, we have vector != padding_idx, so if a value is False, that means 
             # its a padding vector 
-            if curr_mask:
+            if curr_mask is not None and beam:
                 activation_timestep[curr_mask == False, :] = a_prev[curr_mask == False, :]
 
+            # zero out predictions that are masked 
             self.time_cache[t] = {
                 "activation_timestep": activation_timestep,
                 "loss_t": loss_t ,
@@ -133,6 +138,8 @@ class RNN_cell(Layer):
                 "mask_t": curr_mask,
                 "curr_timestep_labels": curr_timestep_labels
             }
+            # pass on current time step activations to next step
+            a_prev = activation_timestep
         
         return probabilities_t, loss, self.time_cache[x.shape[1]-1]["activation_timestep"]
 
@@ -159,8 +166,7 @@ class RNN_cell(Layer):
         dW_embed, dWaa, dWax, dba = self._initGradients()
         dbay = np.zeros_like(self.bay)
         dActivations_ahead = None
-        # backprop through time! 
-        dA_prev = None
+        toEncoder = None
         for t, v in reversed(self.time_cache.items()):
             predictions_t = v["probabilities_t"]
             activations_t = v["activation_timestep"]
@@ -168,18 +174,20 @@ class RNN_cell(Layer):
             x_t = v["inputs_t"]
             pre_embedded_inp_t = v["pre_embedded_inp_t"]
             mask_t = v["mask_t"]
-            batch_size = predictions_t.shape[0] 
+            # batch size shouldn't include vectors that are padding
+            batch_size = predictions_t.shape[0] if mask_t is None else np.sum(mask_t)
             # dL/dZ for the softmax layer simply -> combines dL/dA and dA/dZ in one efficient step 
             # Shape (M, dim_vocab)
             dLogits = predictions_t
             # Shape (m, dim_vocab)
-            dLogits[np.arange(batch_size),labels_t] -=1
+            dLogits[np.arange(dLogits.shape[0]),labels_t] -=1
             dLogits /= batch_size
 
             # apply the mask if mask
-            if mask_t:
-                dLogits[mask==False] = 0 
-            if not dA_prev:
+            # dont let gradients for padding vectors affect the weights or biases at all 
+            if mask_t is not None:
+                dLogits[mask_t==False] = 0 
+            if dActivations_ahead is None:
                 dActivations_ahead = np.zeros_like(activations_t)
             # Shape (dim_vocab, dim_embed)
             dW_embed_softmax = dLogits.T.dot(activations_t)
@@ -203,20 +211,22 @@ class RNN_cell(Layer):
             dba += dba_t
             dbay += dbay_t 
 
-            if t == 0:
-                dA_prev = dActivations_ahead
+            if t== 0:
+                toEncoder = dActivations_ahead
 
         self.Waa, self.Wax, self.ba, self.bay = self.optim(learn_rate, params=[self.Waa, self.Wax, self.ba, self.bay], dparams=[dWaa, dWax, dba, dbay], grad_clip=True)
         self.embedding_layer._backward(dW_embed, learn_rate)
 
-        return dA_prev
+        return toEncoder
 
 
 
-    def _getRnnGradients(dActivations, activations_t, x_t, pre_embedded_inp_t, mask_t = None):
-        # We have to apply the mask at every timestep to prevent padding vectors from influencing weights
-        # in net
-        if mask_t:
+    def _getRnnGradients(self, dActivations, activations_t, x_t, pre_embedded_inp_t, mask_t = None):
+        # for padding vectors, don't update parameters
+        # and for dActivations_behind, let the gradients from the original dActivations
+        # flow unimpeded for pad vectors
+        orig_dActivations = copy.copy(dActivations) 
+        if mask_t is not None:
             dActivations[mask_t == False] = 0 
 
         # backprop through tanh activation to get dL/dZ, applied elementwise over dL/dA
@@ -232,18 +242,21 @@ class RNN_cell(Layer):
         dba_t = np.sum(dZ, axis=0)
 
         # Shape (m, num_neurons)
-        dActivations_ahead = dZ.dot(self.Waa)
+        dActivations_behind = dZ.dot(self.Waa)
 
         # For embedding layer
         # Shape (m, d_embed == num_neurons)
-        dX_embed = dActivations.dot(self.Wax)
+        dX_embed = dActivations.dot(self.Wax.T)
 
-        return dX_embed, dWaa_t, dWax_t, dba_t, dActivations_ahead
+        # let gradients flow unimpeded for pad vectors
+        dActivations_behind[mask_t == False] = orig_dActivations[mask_t == False]
+
+        return dX_embed, dWaa_t, dWax_t, dba_t, dActivations_behind 
 
 
 
 
-    def _initGradients():
+    def _initGradients(self):
         dW_embed = np.zeros_like(self.embedding_layer.W)
         dWaa = np.zeros_like(self.Waa)
         dWax = np.zeros_like(self.Wax)
@@ -272,9 +285,10 @@ class RNN_cell(Layer):
             activations_t = v["activation_timestep"]
             x_t = v["inputs_t"]
             pre_embedded_inp_t = v["pre_embedded_inp_t"]
+            mask_t = v["mask_t"]
 
 
-            dX_embed, dWaa_t, dWax_t, dba_t, dActivations_ahead = self._getRnnGradients(dActivations=dActivations, activations_t=activations_t, x_t = x_t, pre_embedded_inp_t=pre_embedded_inp_t, mask = mask)
+            dX_embed, dWaa_t, dWax_t, dba_t, dActivations = self._getRnnGradients(dActivations=dActivations, activations_t=activations_t, x_t = x_t, pre_embedded_inp_t=pre_embedded_inp_t, mask_t = mask_t)
             ## Sum up all gradients over every timestep
             np.add.at(dW_embed, pre_embedded_inp_t, dX_embed)
             dWaa += dWaa_t
@@ -314,7 +328,8 @@ class RNN_cell(Layer):
         t = 0 
         input_x_t = None 
         iteration_beam = beam_width
-        current_beams = [[list(), 0] for b in range(beam_width)]
+        current_beams = None 
+        mask_t = np.array([True for i in range(beam_width)])
         while iteration_beam > 0 and t < max_seq_len:
             if t == 0:
                 # single input at t== 0 of sos token 
@@ -326,28 +341,37 @@ class RNN_cell(Layer):
                 top_b_idxs = np.argsort(-probabilities)[:,:beam_width]
                 top_b_logprobs = np.log(probabilities[:, top_b_idxs[0]])
                 t += 1 
-                for idx, logprobs, i in zip(top_b_idxs.T, top_b_logprobs.T, range(current_beams)):
-                    current_beams[i][0].append(idx)
-                    current_beams[i][1]+= logprobs
+                curr_seqs = [] 
+                for idx, logprobs in zip(top_b_idxs.T, top_b_logprobs.T):
+                    idx = int(idx)
+                    curr_item = [[],0] 
+                    curr_item[0].append(int(idx))
+                    curr_item[1] += logprobs
                     if idx == eos_int:
-                        candidate_solutions.append(current_beams[i])
+                        # you can remove the activations from the encoded matrix if its done
+                        # but for simplicites sake we just set it to zero and mask out 
+                        mask_t[idx] = False 
                         iteration_beam -= 1
-                        current_beams.pop(i)
+                    else:
+                        curr_seqs.append(curr_item)
+                current_beams = copy.deepcopy(curr_seqs)
             else:
                 # Shape (1, beam_width)
                 # The last predicted integer for each beam forms input matrix at this timestep
                 input_x_t = np.array([x[0][-1] for x in current_beams])
+                input_x_t = input_x_t.reshape(-1,1)
 
                 # Each input vector produces a probability distribution for expected words at the
                 # next timestep
                 # Shape (beam_width, dim_vocab)
-                probabilities, _, encoded = self._forward(x=input_x_t, a_prev=encoded)
+                assert input_x_t.shape[0] == (encoded.shape[0]) or encoded.shape[0] ==1, "Shape mismatch! Your passing in an unequal number of input arguments compared to encoded arguments!"
+                probabilities, _, encoded = self._forward(x=input_x_t, a_prev=encoded, mask=mask_t if t>1 else None)
 
                 # you don't just want the highest prob at this timestep - you want the highest prob words when
                 # considering all the log(probs) encountered at time 0,.., t-1 as well. So log the probabilities
                 # at this timestep, then add them to the log(prob) of all previous timesteps and find the maximum b probs
                 # along with the indices (i,j) they occurr at 
-                log_probs = np.array([x[1] for x in current_beams]).reshape(beam_width,1)
+                log_probs = np.array([x[1] for x in current_beams]).reshape(iteration_beam,1)
                 probabilities = np.log(probabilities)
                 probabilities += log_probs
                 # we need to determine the probability of the max words in this matrix along with the sequence they belong to 
@@ -355,12 +379,12 @@ class RNN_cell(Layer):
                 # returns tuple(nd.array<int>, nd.array<int>) where first arg refers to the input sequence that produced the prob
                 # and second arg refers to the index of the word in the vocab 
                 
-                rows_cols_maxProbabilites= np.unravel_index((-probabilities).flatten().argsort()[:beam_width], probabilities.shape)
+                rows_cols_maxProbabilites= np.unravel_index((-probabilities).flatten().argsort()[:iteration_beam], probabilities.shape)
                 max_sequence_logprobs = probabilities[rows_cols_maxProbabilites]
 
                 new_sequences_t = [] 
                 for seq_logprob, seq_idx, vocab_idx in zip(max_sequence_logprobs, *rows_cols_maxProbabilites):
-                    curr_item = current_beams[seq_idx]
+                    curr_item = copy.deepcopy(current_beams[seq_idx])
                     curr_item[0].append(vocab_idx)
                     curr_item[1] = seq_logprob
 
@@ -370,13 +394,16 @@ class RNN_cell(Layer):
                     if vocab_idx == eos_int:
                         # remove the eos token from out item - pop it off
                         # dont want that included in translation 
-                        curr_item.pop() 
+                        # also need to remove the corresponding activation within encoded as seq is done
+                        # dont need to keep passing activation along
+                        curr_item[0].pop() 
+                        mask_t[seq_idx] = False
                         iteration_beam -= 1
                         candidate_solutions.append(curr_item)
                     else:
                         new_sequences_t.append(curr_item)
                 
-                current_beams = new_sequences_t 
+                current_beams = copy.deepcopy(new_sequences_t)
                 t += 1 
 
         output_soln = self._getOutputBeamSearch(candidate_solutions, current_beams, t, iteration_beam, length_normalization)
@@ -387,7 +414,7 @@ class RNN_cell(Layer):
         if iteration_beam != 0:
             # if we didn't finish by fufilling beam_width different beams w/ eos tokens, then 
             # just add the sequences we did get to end of candidate solutions 
-            candidate_solutions.extend(candidate_solutions)
+            candidate_solutions.extend(current_beams)
         
         # Normalize the logprobs by the length normalization factor to prevent shorter seqs from having higher log probs by default
         # x[0] -> list of integers containg sequence

@@ -17,11 +17,6 @@ class Embedding_layer(Layer):
         self.embed_dim = embed_dim
         self.W = self._initWeights()
         self.optim = optim() 
-        # cache the inputs to the layer - this embedding layer
-        # can be used to tie the weights between the input layer and 
-        # output layer so cache both inputs 
-        self.x_inp = None 
-        self.x_softmax = None 
 
     def _initWeights(self):
         return np.random.randn(self.dim_in, self.embed_dim)*0.01
@@ -42,7 +37,6 @@ class Embedding_layer(Layer):
 
         # x should be of shape (M, d_embed), W transposed (d_embed, d_vocab) 
         # bay shape (1, d_vocab)
-        self.x_softmax = x
         logits = x.dot(self.W.T) + bay
         return logits 
 

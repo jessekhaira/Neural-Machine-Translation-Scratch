@@ -37,6 +37,10 @@ class Decoder(object):
         and the y<t> is the label for the next time step. Regardless of what we predict at a given time
         step, we feed the correct label in at the next time step.
 
+        If your calling the Decoder directly, this assumes it is being used for training. If predictions are
+        wanted, use the _beamSearch method instead, which carries out prediction with the decoder when
+        given an encoded sentence. 
+
         Inputs:
             -> encoded_batch (NumPy Matrix): Matrix of shape (M, num_neurons) where M is the number of examples,
             num_neurons is the number of neurons in the encoder
@@ -49,14 +53,14 @@ class Decoder(object):
         # Shape (M, T-1)
         x_matrix = target_language_seqs[:, :-1]
         y_matrix = target_language_seqs[:,1:]
-        _, loss = self.rnn_cell._forward(x=x_matrix, y =y_matrix, a_prev=encoded_batch, mask = mask)
+        _, loss, _ = self.rnn_cell._forward(x=x_matrix, y =y_matrix, a_prev=encoded_batch, mask = mask)
         return loss 
 
-    def _backward(self, mask, learn_rate):
-        dencoded_batch= self.rnn_cell._backward(mask=mask, learn_rate=learn_rate)
+    def _backward(self, learn_rate):
+        dencoded_batch= self.rnn_cell._backward(learn_rate=learn_rate)
         return dencoded_batch
 
-    def _beamSearch(self, encoded, eos_int, sos_int, length_normalization, beam_width, max_seq_len):
+    def beamSearch(self, encoded, eos_int, sos_int, length_normalization, beam_width, max_seq_len):
         return self.rnn_cell._beamSearch(encoded, eos_int, sos_int, length_normalization, beam_width, max_seq_len)
     
 
