@@ -2,7 +2,7 @@
 
 ## Description  
 
-This repo contains code for a sequence to sequence model implemented from scratch in NumPy. The model contains two core neural networks: an encoder network and a decoder network. These networks are both plain RNN cells. Within this model, they are used in the configuration shown below for the task of machine translation.
+This repo contains code for a sequence to sequence model implemented from scratch in NumPy. The model implemented contains two neural networks: an encoder network and a decoder network. Within this model, a plain RNN cell was implemented, which is used for both of these networks in the configuration shown below for the task of machine translation. 
 
 <img src="./encoder_decoder.jpg">
 
