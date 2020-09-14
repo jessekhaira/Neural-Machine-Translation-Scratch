@@ -1,0 +1,6 @@
+README.md
+setup.py
+Neural_Machine_Translation_Scratch.egg-info/PKG-INFO
+Neural_Machine_Translation_Scratch.egg-info/SOURCES.txt
+Neural_Machine_Translation_Scratch.egg-info/dependency_links.txt
+Neural_Machine_Translation_Scratch.egg-info/top_level.txt
