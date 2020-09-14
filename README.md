@@ -1,6 +1,6 @@
 # Neural Machine Translation 
 
-## Description & Purpose 
+## Description  
 
 This repo contains code for a sequence to sequence model implemented from scratch in NumPy. The model contains two core neural networks: an encoder network and a decoder network. These networks are both plain RNN cells. Within this model, they are used in the configuration shown below for the task of machine translation.
 
