@@ -57,7 +57,7 @@ class Seq2Seq_rnn(object):
         self.sos_int = sos_int
 
 
-    def _forward(self, x,y, mask_src, mask_trg, loss_func):
+    def _forward(self, x,y, mask_src, mask_trg):
         """
         This method computes the forward pass through the sequence to sequence model, 
         producing a loss value and a predictions vector.
@@ -145,11 +145,11 @@ class Seq2Seq_rnn(object):
                 assert type(src_train) == np.ndarray, "Your batches have to be numpy matrices!"
                 
                 # get the masks for this batch of examples -- will be of shape (batch_size, seq_len)
-                mask_src = getMask(src_train)
-                mask_trg = getMask(trg_train)
+                mask_src = getMask(src_train, padding_idx)
+                mask_trg = getMask(trg_train, padding_idx)
 
                 loss = self._forward(src_train, trg_train, mask_src, mask_trg)
-                self._backward(mask_src, mask_trg, self.optim, learn_rate)
+                self._backward(learn_rate)
                 
                 if learning_schedule:
                     learn_rate = learning_schedule(learn_rate, epoch)
@@ -158,7 +158,7 @@ class Seq2Seq_rnn(object):
             
             # smoothen the loss out when training 
             training_losses.append(smoothLossTrain(np.mean(epoch_loss)))
-
+ 
 
             # get loss w/ teacher forcing when validating
             if valid_loader:
@@ -167,13 +167,15 @@ class Seq2Seq_rnn(object):
                 for i, batch in enumerate(valid_loader):
                     src = batch.src_name
                     trg = batch.trg_name
+                    mask_srcV = getMask(src, padding_idx)
+                    mask_trgV = getMask(trg, padding_idx)
 
                     if i%100 ==0 and verbose:
                         input_sentence = "".join(list(map(lambda x: self.src_map_i2c[x], src[0])))
                         predicted = self.predict(src[0])
                         print('Epoch %s, input_sentence %s: translated sentence %s:'%(i, input_sentence, predicted))
 
-                    _, loss = self.forward(src, trg)
+                    _, loss = self._forward(src, trg, mask_srcV, mask_trgV)
                     batch_losses.append(loss)
                 
                 validation_losses.append(smoothLossValid(np.mean(batch_losses)))

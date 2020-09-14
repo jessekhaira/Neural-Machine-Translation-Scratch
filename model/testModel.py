@@ -8,21 +8,20 @@ import matplotlib.pyplot as plt
 class tests(unittest.TestCase):
     def testOverallAndSoftmax(self):
         source_data = np.array([[0,3,5,6,4,3,2,1], [0,4,5,6,7,8,9,2], [0,3,1,1,5,6,8,2]])
-        target_data = np.array([[0,3,9,6,7,1], [0,1,3,10,5,2], [0,1,4,3,7,2]])
+        target_data = np.array([[0,3,10,9,10,6,7,1], [0,1,10, 3,10, 8,5,2], [0,1,10,4,3,10,7,2]])
 
         trg_vocab = {
             0: "<sos>",
-            1: "<pad>",
-            2: "<eos>",
-            3: "I",
-            4: "luck",
-            5: "smile",
-            6: "dog",
-            7: "walk",
-            8: "today",
-            9: "had",
-            10: "happy",
-            11: " "
+            1: "<eos>",
+            2: "I",
+            3: "luck",
+            4: "smile",
+            5: "dog",
+            6: "walk",
+            7: "today",
+            8: "had",
+            9: "happy",
+            10: " "
         }
 
         obj2 = Seq2Seq_rnn(
@@ -33,23 +32,23 @@ class tests(unittest.TestCase):
             num_neurons_encoder=512,
             num_neurons_decoder=512,
             trg_map_i2c=trg_vocab,
-            eos_int=2,
+            eos_int=1,
             sos_int=0
         )
         mask_src = getMask(source_data, 1)
         mask_trg = getMask(target_data, 1)
 
-        inp_seq = np.array([[4,5,2,3,1]])
+        inp_seq = np.array([[0,3,5,6,4,3,2,1]])
         learn_rate= None
         # This makes sure that the forward pass and backward pass are all wired up correctly
         # since achieving ~0 loss on 3 examples should be trivial if they are
         # and it is! 
         for test_epoch in range(1000000):
-            if test_epoch < 1000:
+            if test_epoch < 1200:
                 learn_rate = 0.01
-            else:
-                learn_rate = 0.001
-            lossVal = obj2._forward(source_data, target_data, mask_src, mask_trg, crossEntropy)
+            elif test_epoch > 1200 and test_epoch < 1700:
+                learn_rate = 0.005
+            lossVal = obj2._forward(source_data, target_data, mask_src, mask_trg)
             obj2._backward(learn_rate)
             output = obj2.predict(inp_seq)
             print(lossVal)

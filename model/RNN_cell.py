@@ -41,7 +41,7 @@ class RNN_cell(Layer):
         Waa = np.random.randn(num_neurons, num_neurons) * 0.01
         return Waa, Wax, ba
 
-    def _forward(self, x, y = None, a_prev = None, mask = None, beam = False):
+    def _forward(self, x, y = None, a_prev = None, mask = None):
         """
         This method carries out the forward pass through an RNN.
 
@@ -64,10 +64,7 @@ class RNN_cell(Layer):
             -> a_prev (NumPy Matrix | None): Matrix of activations from the previous timestep 
             -> mask (NumPy Matrix | None): Matrix of integers of shape (M,T) indicating which indices belong to padding
             vectors or None.
-            -> beam (boolean): Boolean indicating whether we are using forward pass to carry out a beam search. In beam search,
-            we only care that sequences that have already ended output a probability distribution over the vocab of 0's so they
-            wont be considered when finishing off the remaining beams. 
-            
+
             So mask[0] corresponds to a sequence of integers for the first example, and if a value is False
             within this row, that means the vector this idx corresponds to is a padding vector. 
 
@@ -79,14 +76,9 @@ class RNN_cell(Layer):
             -> Integer representing the loss, or an encoded tensor. Depends on whether rnn cell is used to predict or
             used to encode. 
         """
-        # We can't process all the vectors at every time step in parallel which is a drawback to this architecture
-        # and a big reason why transformers are more efficient 
-
         # shape (M, num_neurons)
-        if a_prev is None: 
-            a_prev = np.zeros((x.shape[0], self.Waa.shape[0]))
+        a_prev = a_prev if a_prev is not None else np.zeros((x.shape[0], self.Waa.shape[0]))
         loss = 0 
-        probabilities = None 
         for t in range(x.shape[1]):
             # get the sequence of vectors that occur specifically at this time step, then process them
             # all at one time 
@@ -94,15 +86,9 @@ class RNN_cell(Layer):
             # Shape (M, dim_in)
             curr_timestep_x = self.embedding_layer._forward(pre_embedded_inp_t)
 
-            curr_timestep_labels = None 
-            if y is not None:
-                # Shape (M,)
-                curr_timestep_labels = y[:, t]
+            curr_timestep_labels = None if y is None else y[:, t]
 
-            curr_mask = None 
-            if mask is not None:
-                # Shape (M,) - if shape is already good then work with it as is 
-                curr_mask = mask if len(mask.shape) == 1 else mask[:,t]
+            curr_mask = None if mask is None else mask[:,t]
 
             # Shape (M, num_neurons)
             activation_timestep = np.tanh(curr_timestep_x.dot(self.Wax) + a_prev.dot(self.Waa) + self.ba)
@@ -115,9 +101,7 @@ class RNN_cell(Layer):
                 # Shape (M, d_vocab)
                 probabilities_t = softmax(logits)
                 if curr_timestep_labels is not None:
-                    # Scalar 
                     loss_t = self.costFunction(curr_timestep_labels, probabilities_t, mask = curr_mask)
-                    # total loss is accumulated over every timestep
                     loss += loss_t 
             
             # Mask: If we fed in a padding vector at this time step, we want to replace that dummy activation
@@ -125,10 +109,10 @@ class RNN_cell(Layer):
 
             # In our get_mask function, we have vector != padding_idx, so if a value is False, that means 
             # its a padding vector 
-            if curr_mask is not None and beam:
+            if curr_mask is not None:
                 activation_timestep[curr_mask == False, :] = a_prev[curr_mask == False, :]
 
-            # zero out predictions that are masked 
+
             self.time_cache[t] = {
                 "activation_timestep": activation_timestep,
                 "loss_t": loss_t ,
@@ -321,15 +305,13 @@ class RNN_cell(Layer):
         assert encoded.shape == (1, self.Waa.shape[0]), "Your encoded vector produced by the encoder has to be of shape (1,num_neurons)!"
         # Array of length beam_width where array[i] = [[sequence of integers ending with eos], log_prob] 
         candidate_solutions = []
-
         # keep unfolding rnn until either of condtions is false:
         # beam width has shrunk to 0
         # t == max_seq_len
         t = 0 
         input_x_t = None 
         iteration_beam = beam_width
-        current_beams = None 
-        mask_t = np.array([True for i in range(beam_width)])
+        current_beams = {}
         while iteration_beam > 0 and t < max_seq_len:
             if t == 0:
                 # single input at t== 0 of sos token 
@@ -341,37 +323,36 @@ class RNN_cell(Layer):
                 top_b_idxs = np.argsort(-probabilities)[:,:beam_width]
                 top_b_logprobs = np.log(probabilities[:, top_b_idxs[0]])
                 t += 1 
-                curr_seqs = [] 
+                curr_beam = 0 
                 for idx, logprobs in zip(top_b_idxs.T, top_b_logprobs.T):
                     idx = int(idx)
                     curr_item = [[],0] 
                     curr_item[0].append(int(idx))
                     curr_item[1] += logprobs
                     if idx == eos_int:
-                        # you can remove the activations from the encoded matrix if its done
-                        # but for simplicites sake we just set it to zero and mask out 
-                        mask_t[idx] = False 
-                        iteration_beam -= 1
+                        iteration_beam -= 1 
+                    # every beam holds two things: item including seq it has produced and 
+                    # its log prob, along with the corresponding encoded vector belonging to it 
                     else:
-                        curr_seqs.append(curr_item)
-                current_beams = copy.deepcopy(curr_seqs)
+                        current_beams[curr_beam] = [curr_item, encoded]
+                        curr_beam += 1 
             else:
                 # Shape (1, beam_width)
                 # The last predicted integer for each beam forms input matrix at this timestep
-                input_x_t = np.array([x[0][-1] for x in current_beams])
+                t += 1 
+                input_x_t = np.array([v[0][0][-1] for v in current_beams.values()])
                 input_x_t = input_x_t.reshape(-1,1)
 
-                # Each input vector produces a probability distribution for expected words at the
-                # next timestep
-                # Shape (beam_width, dim_vocab)
+                encoded = np.empty((iteration_beam, current_beams[0][1].shape[1]))
+                encoded[:] = [v[1] for v in current_beams.values()]
                 assert input_x_t.shape[0] == (encoded.shape[0]) or encoded.shape[0] ==1, "Shape mismatch! Your passing in an unequal number of input arguments compared to encoded arguments!"
-                probabilities, _, encoded = self._forward(x=input_x_t, a_prev=encoded, mask=mask_t if t>1 else None)
+                probabilities, _, encoded = self._forward(x=input_x_t, a_prev=encoded)
 
                 # you don't just want the highest prob at this timestep - you want the highest prob words when
                 # considering all the log(probs) encountered at time 0,.., t-1 as well. So log the probabilities
                 # at this timestep, then add them to the log(prob) of all previous timesteps and find the maximum b probs
                 # along with the indices (i,j) they occurr at 
-                log_probs = np.array([x[1] for x in current_beams]).reshape(iteration_beam,1)
+                log_probs = np.array([v[0][1] for v in current_beams.values()]).reshape(iteration_beam,1)
                 probabilities = np.log(probabilities)
                 probabilities += log_probs
                 # we need to determine the probability of the max words in this matrix along with the sequence they belong to 
@@ -381,40 +362,41 @@ class RNN_cell(Layer):
                 
                 rows_cols_maxProbabilites= np.unravel_index((-probabilities).flatten().argsort()[:iteration_beam], probabilities.shape)
                 max_sequence_logprobs = probabilities[rows_cols_maxProbabilites]
-
-                new_sequences_t = [] 
+                curr_beam = 0 
+                new_beams = {}  
                 for seq_logprob, seq_idx, vocab_idx in zip(max_sequence_logprobs, *rows_cols_maxProbabilites):
-                    curr_item = copy.deepcopy(current_beams[seq_idx])
-                    curr_item[0].append(vocab_idx)
-                    curr_item[1] = seq_logprob
-
                     # if highest prob for this sequence is eos, this sequence is removed from
                     # consideration and added to final list of solutions
                     # otherwise append to end of new sequences at this time step and move on 
                     if vocab_idx == eos_int:
-                        # remove the eos token from out item - pop it off
-                        # dont want that included in translation 
-                        # also need to remove the corresponding activation within encoded as seq is done
-                        # dont need to keep passing activation along
-                        curr_item[0].pop() 
-                        mask_t[seq_idx] = False
                         iteration_beam -= 1
-                        candidate_solutions.append(curr_item)
+                        # Useful: 
+                        # current_beams[seq_idx] = [item, encoded]
+                        # item = [[seq], log_prob]
+                        candidate_solutions.append(current_beams[seq_idx][0])
                     else:
-                        new_sequences_t.append(curr_item)
-                
-                current_beams = copy.deepcopy(new_sequences_t)
-                t += 1 
-
+                        # build the new item off the old item 
+                        curr_item = copy.deepcopy(current_beams[seq_idx])
+                        # add the vocab idx word to the end of seq
+                        curr_item[0][0].append(vocab_idx)
+                        curr_item[0][1] = seq_logprob
+                        curr_item[1] = encoded[seq_idx:seq_idx+1] 
+                        # use curr_beam to assign new position of new index for new timestep
+                        # which may or may not be equal to the original seq_idx depending of if indices
+                        # have been popped off or if we are repeating same indice multiple times 
+                        new_beams[curr_beam] = curr_item
+                        curr_beam += 1 
+    
+                current_beams = new_beams 
         output_soln = self._getOutputBeamSearch(candidate_solutions, current_beams, t, iteration_beam, length_normalization)
         return output_soln
 
 
     def _getOutputBeamSearch(self, candidate_solutions, current_beams, t, iteration_beam, length_normalization):
         if iteration_beam != 0:
-            # if we didn't finish by fufilling beam_width different beams w/ eos tokens, then 
-            # just add the sequences we did get to end of candidate solutions 
-            candidate_solutions.extend(current_beams)
+            # if beams_not_eos remains True after t time steps, then we add the seq to the remaining_seqs  
+            remaining_seqs = [v[0] for v in current_beams.values()]
+            candidate_solutions.extend(remaining_seqs)
         
         # Normalize the logprobs by the length normalization factor to prevent shorter seqs from having higher log probs by default
         # x[0] -> list of integers containg sequence
@@ -423,7 +405,6 @@ class RNN_cell(Layer):
 
         # Sort according to the log probs and then take the first sentence 
         most_likely_sentence = sorted(normalized_seqs, key = lambda x:x[1], reverse=True)[0][0]
-        # This should be an array of integers containing 
         return most_likely_sentence
 
         
