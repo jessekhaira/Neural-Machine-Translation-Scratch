@@ -1,4 +1,4 @@
-from Utils import Layer
+from model.Utils import Layer
 import numpy as np 
 
 class Embedding_layer(Layer):

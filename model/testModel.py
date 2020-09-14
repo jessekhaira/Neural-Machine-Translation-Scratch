@@ -4,8 +4,20 @@ import numpy as np
 from Utils import getMask
 from Utils import crossEntropy
 import matplotlib.pyplot as plt 
-
+from model.Utils import smoothLoss
+from model.Utils import GradientDescentMomentum
+from model.Utils import exponentialDecaySchedule
+from model.Seq2Seq_rnn import Seq2Seq_rnn
+from torchtext.data import Field
+from torchtext.data import TabularDataset
+from torchtext.data import BucketIterator
+from sklearn.model_selection import train_test_split
+from model.Seq2Seq_rnn import Seq2Seq_rnn
+objLoss = smoothLoss()
 class tests(unittest.TestCase):
+    # This test ensures sure that the forward pass and backward pass are all wired up correctly
+    # for both the encoder and decoder, along with testing out beam search. 
+    # Achieving ~0 loss should be trivial if the algorithm is coded up currently, and it is!
     def testOverallAndSoftmax(self):
         source_data = np.array([[0,3,5,6,4,3,2,1], [0,4,5,6,7,8,9,2], [0,3,1,1,5,6,8,2]])
         target_data = np.array([[0,3,10,9,10,6,7,1], [0,1,10, 3,10, 8,5,2], [0,1,10,4,3,10,7,2]])
@@ -40,22 +52,23 @@ class tests(unittest.TestCase):
 
         inp_seq = np.array([[0,3,5,6,4,3,2,1]])
         learn_rate= None
-        # This makes sure that the forward pass and backward pass are all wired up correctly
-        # since achieving ~0 loss on 3 examples should be trivial if they are
-        # and it is! 
         for test_epoch in range(1000000):
             if test_epoch < 1200:
                 learn_rate = 0.01
             elif test_epoch > 1200 and test_epoch < 1700:
                 learn_rate = 0.005
             lossVal = obj2._forward(source_data, target_data, mask_src, mask_trg)
+            lossVal = objLoss(lossVal)
             obj2._backward(learn_rate)
             output = obj2.predict(inp_seq)
             print(lossVal)
             print(output)
             print(test_epoch)
             if test_epoch % 1000 == 0:
-                show_param_norms(obj2.Encoder, obj2.Decoder, test_epoch)    
+                show_param_norms(obj2.Encoder, obj2.Decoder, test_epoch)   
+
+
+
 
 def show_param_norms(enc, dec, e):
 

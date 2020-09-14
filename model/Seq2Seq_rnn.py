@@ -1,9 +1,9 @@
-from Encoder import Encoder
-from Decoder import Decoder 
-from Utils import GradientDescentMomentum
-from Utils import crossEntropy
-from Utils import getMask
-from Utils import smoothLoss
+from model.Encoder import Encoder
+from model.Decoder import Decoder 
+from model.Utils import GradientDescentMomentum
+from model.Utils import crossEntropy
+from model.Utils import getMask
+from model.Utils import smoothLoss
 import torch 
 import numpy as np 
 from tqdm import tqdm
@@ -19,8 +19,8 @@ class Seq2Seq_rnn(object):
     of the word it thinks is the most likely in the target language. 
 
     Inputs:
-        -> eos_int (int): Integer representing the index which the end of sequence token occupies 
-        -> sos_int (int): Integer representing the index which the start of sequence token occupies
+        -> eos_int (int): Integer representing the index which the end of sequence token occupies in the target vocab
+        -> sos_int (int): Integer representing the index which the start of sequence token occupies in the target vocab
         -> vocab_size_src (int): Size of the source language vocabulary
         -> vocab_size_trg (int): Size of the target language vocabulary
         -> dim_embed_src (int): Size of the embeddings for the encoder 
@@ -93,14 +93,16 @@ class Seq2Seq_rnn(object):
 
     def train (self, 
             data_loader, 
+            batch_size,
             src_name, 
             trg_name, 
             padding_idx, 
             valid_loader = None, 
-            learn_rate = 0.3, 
+            learn_rate = 0.1, 
             learning_schedule = None, 
             num_epochs=100, 
-            verbose =1):
+            verbose =1,
+            _testing= None):
         """
         This method is used to train the seq2seq rnn model in batches. This method expects the data
         to come in as an iterator, and the batches to come in as an object like TorchText's 
@@ -116,6 +118,7 @@ class Seq2Seq_rnn(object):
 
         Inputs:
             -> data_loader (Iterator): Iterator for the data used to train the model in batches
+            -> batch_size (int): Size of the batches used within an epoch 
             -> valid_loader (Iterator): Iterator for the data used to validate the model in batches 
             -> src_name (Property Accessor): Used to access the batch of examples of shape (batch_size, seq_len)
             of source language
@@ -123,70 +126,94 @@ class Seq2Seq_rnn(object):
             of the target language
             -> padding_idx (int): Represents idx used for masking 
             -> learn_rate (int): Integer representing learning rate used to update parameters
-            -> learning_schedule (Function | None): Schedule used to update the learning rate throughout training
+            -> learning_schedule (Function | None): Schedule used to update the learning rate throughout training. If provided,
+            function must take as input learn rate and the current epoch the net is on. 
             -> num_epochs (int): Number of epochs to train the model for
+            -> _testing (int | None): During testing, parameter used to ensure model can do well on a small number of 
+            examples. So if one epoch has say 56 batches, instead of going through all 56 batches, we only go through testing
+            batches in a single epoch. 
         """ 
         training_losses = [] 
         validation_losses = [] 
-        smoothLossTrain = smoothLoss() 
-        smoothLossValid = smoothLoss() 
+        smoothLossTrain = smoothLoss(0.1) 
+        smoothLossValid = smoothLoss(0.1) 
         for epoch in tqdm(range(num_epochs)):
             epoch_loss = []
             for i, batch in enumerate(data_loader):
+                if i == _testing:
+                    break
+
                 # Shape (M,T_src)
-                src_train = batch.src_name
+                if verbose:
+                    print('Entering epoch: %s, batch number %s!'%(epoch, i))
+                src_train = getattr(batch, src_name)
                 # Shape (M,T_trg)
-                trg_train = batch.trg_name 
+                trg_train = getattr(batch, trg_name)
                 
-                # convert torch tensors to numpy
-                if type(src_train) == torch.Tensor:
-                    src_train = src_train.numpy()
-                    trg_train = trg_train.numpy() 
-                assert type(src_train) == np.ndarray, "Your batches have to be numpy matrices!"
+                # make sure we have np arrays and shapes of arrays are (M,T)
+                src_train, trg_train = self._preprocessBatch(src_train, trg_train, batch_size)
                 
-                # get the masks for this batch of examples -- will be of shape (batch_size, seq_len)
+                # Shape (batch_size, seq_len)
                 mask_src = getMask(src_train, padding_idx)
                 mask_trg = getMask(trg_train, padding_idx)
 
                 loss = self._forward(src_train, trg_train, mask_src, mask_trg)
                 self._backward(learn_rate)
-                
-                if learning_schedule:
-                    learn_rate = learning_schedule(learn_rate, epoch)
-
                 epoch_loss.append(loss)
             
             # smoothen the loss out when training 
             training_losses.append(smoothLossTrain(np.mean(epoch_loss)))
- 
+            # Update learn rate after every epoch 
+            saved_lr = learn_rate
+            learn_rate = learn_rate if not learning_schedule else learning_schedule(learn_rate, epoch)
+            if learning_schedule:
+                print('old learn rate: %s, new learn rate: %s'%(saved_lr, learn_rate))
+
 
             # get loss w/ teacher forcing when validating
             if valid_loader:
                 batch_losses = [] 
                 
                 for i, batch in enumerate(valid_loader):
-                    src = batch.src_name
-                    trg = batch.trg_name
-                    mask_srcV = getMask(src, padding_idx)
-                    mask_trgV = getMask(trg, padding_idx)
+                    if i == _testing:
+                        break 
+                    srcV = getattr(batch, src_name)
+                    trgV = getattr(batch, trg_name) 
+                    srcV, trgV = self._preprocessBatch(srcV, trgV, batch_size)
+                    mask_srcV = getMask(srcV, padding_idx)
+                    mask_trgV = getMask(trgV, padding_idx)
+
+                    
 
                     if i%100 ==0 and verbose:
-                        input_sentence = "".join(list(map(lambda x: self.src_map_i2c[x], src[0])))
-                        predicted = self.predict(src[0])
-                        print('Epoch %s, input_sentence %s: translated sentence %s:'%(i, input_sentence, predicted))
-
-                    _, loss = self._forward(src, trg, mask_srcV, mask_trgV)
+                        input_sentence = " ".join(list(map(lambda x: self.src_map_i2c[x], srcV[0])))
+                        predicted = self.predict(srcV[0:1])
+                        print(predicted)
+                        print('Batch %s, input_sentence: %s translated sentence: %s'%(i, input_sentence, predicted))
+        
+                    loss = self._forward(srcV, trgV, mask_srcV, mask_trgV)
                     batch_losses.append(loss)
                 
                 validation_losses.append(smoothLossValid(np.mean(batch_losses)))
 
-            if verbose:
+            if verbose and valid_loader:
                 print('Epoch num: %s, Train Loss: %s, Validation Loss: %s'%(epoch, training_losses[-1], validation_losses[-1]))
-            
+            if verbose:
+                 print('Epoch num: %s, Train Loss: %s'%(epoch, training_losses[-1]))
 
         return training_losses, validation_losses
 
-            
+    
+    def _preprocessBatch(self, x1, x2, batch_size):
+        if type(x1) == torch.Tensor:
+            x1 = x1.numpy()
+            x2 = x2.numpy() 
+        if x1.shape[0] != batch_size:
+            x1 = x1.T 
+            x2 = x2.T 
+        return x1, x2
+
+
     def predict(self, inp_seq, length_normalization = 0.75, beam_width=3, max_seq_len = 20):
         """
         This method carries out translation from a source language to a target language

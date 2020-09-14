@@ -1,6 +1,6 @@
-from Embedding_layer import Embedding_layer
-from RNN_cell import RNN_cell
-from Utils import crossEntropy
+from model.Embedding_layer import Embedding_layer
+from model.RNN_cell import RNN_cell
+from model.Utils import crossEntropy
 from collections import deque 
 
 class Decoder(object):

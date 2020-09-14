@@ -1,5 +1,5 @@
-from Embedding_layer import Embedding_layer 
-from RNN_cell import RNN_cell
+from model.Embedding_layer import Embedding_layer 
+from model.RNN_cell import RNN_cell
 
 class Encoder(object):
     """

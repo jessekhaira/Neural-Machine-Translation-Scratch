@@ -21,7 +21,7 @@ class Layer(ABC):
 
 
 class GradientDescentMomentum(object):
-    def __init__(self, b1 = 0.9):
+    def __init__(self, b1 = 0.95):
         self.b1 = b1
         self.running_avgs = []
 
@@ -73,7 +73,7 @@ def crossEntropy(y,yhat, mask = None):
     Outputs:
         - int representing the loss 
     """
-    loss = -np.log(yhat[np.arange(yhat.shape[0]), y])
+    loss = -np.log(yhat[np.arange(yhat.shape[0]), y]+1e-7)
     # number of examples in the input is equivalent to the number of non-padding vectors if we have a mask 
     batch_size = y.shape[0] if mask is None else np.sum(mask)
     return np.sum(loss,axis=0)/batch_size if mask is None else np.sum(mask.astype(int)*loss,axis=0)/batch_size
@@ -89,4 +89,11 @@ def getMask(vector, pad_idx):
     # True - include this vector when computing loss, updating gradients and 
     # calculating activations as the idx is not equal to the pad_idx 
     return vector != pad_idx
+
+
+def exponentialDecaySchedule(decay_rate, decay_after_epochs):
+    def decay_lr(learn_rate, epoch):
+        return learn_rate * decay_rate**(epoch/decay_after_epochs)
+    return decay_lr
+
 

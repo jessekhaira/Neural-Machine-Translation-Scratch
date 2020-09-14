@@ -1,6 +1,6 @@
-from Utils import Layer
+from model.Utils import Layer
 import numpy as np 
-from Utils import softmax
+from model.Utils import softmax
 from collections import OrderedDict
 from collections import deque 
 import copy 
