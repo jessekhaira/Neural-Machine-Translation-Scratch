@@ -2,8 +2,16 @@
 
 -- In progress -- 
 
-This is an implementation of a batched recurrent neural network(RNN) from scratch with NumPy. Weight tying is utilized within this model, where the input embedding layer and the linear projection before the softmax layer use the same weight matrix. 
 
-The model was trained and tested on a dataset with the goal of translating english sequences to spanish sequences. 
+This is an implementation of a batched recurrent neural network(RNN) for the task of machine translation with just NumPy. An encoder network and a decoder network were used in the following configuration for the task: 
 
-The purpose of the repo was to deepen my understanding of how RNNs are used for machine translation, and how RNNs can train in batches using padding vectors and masks. 
+<img src="./encoder_decoder.jpg">
+
+
+In addition to the RNN, I also implemented:
+* An efficient embedding layer(no one hot encoded vectors!)
+* Weight tying between the embedding layer and the output layer
+* Shrinking beam search to maximize the probability of the sentence output 
+
+The purpose of the repo was to deepen my understanding of RNNs in general, and some specific implementation details of how RNNs train in batches (padding, masks, etc). 
+
