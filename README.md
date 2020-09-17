@@ -8,7 +8,7 @@ This repo contains code for a sequence to sequence model implemented from scratc
 
 In addition to the primary model, I also implemented: 
 * An efficient embedding layer(no one hot encoded vectors!)
-* Weight tying between the embedding layer and the output layer
+* Weight tying between the embedding layer and the output layer in the decoder 
 * Beam Search 
 
 The purpose of the repo was to deepen my understanding of RNNs, learn about specific implementation details of how RNNs train in batches (padding, masks, etc), and also gain a better understanding of natural language processing in general.  
