@@ -1,9 +1,9 @@
 import unittest
 from Seq2Seq_rnn import Seq2Seq_rnn
-import numpy as np 
+import numpy as np
 from Utils import getMask
 from Utils import crossEntropy
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 from model.Utils import smoothLoss
 from model.Utils import GradientDescentMomentum
 from model.Utils import exponentialDecaySchedule
@@ -13,14 +13,21 @@ from torchtext.data import TabularDataset
 from torchtext.data import BucketIterator
 from sklearn.model_selection import train_test_split
 from model.Seq2Seq_rnn import Seq2Seq_rnn
+
 objLoss = smoothLoss()
+
+
 class tests(unittest.TestCase):
     # This test ensures sure that the forward pass and backward pass are all wired up correctly
-    # for both the encoder and decoder, along with testing out beam search. 
+    # for both the encoder and decoder, along with testing out beam search.
     # Achieving ~0 loss should be trivial if the algorithm is coded up currently, and it is!
     def testOverallAndSoftmax(self):
-        source_data = np.array([[0,3,5,6,4,3,2,1], [0,4,5,6,7,8,9,2], [0,3,1,1,5,6,8,2]])
-        target_data = np.array([[0,3,10,9,10,6,7,1], [0,1,10, 3,10, 8,5,2], [0,1,10,4,3,10,7,2]])
+        source_data = np.array([[0, 3, 5, 6, 4, 3, 2, 1],
+                                [0, 4, 5, 6, 7, 8, 9, 2],
+                                [0, 3, 1, 1, 5, 6, 8, 2]])
+        target_data = np.array([[0, 3, 10, 9, 10, 6, 7, 1],
+                                [0, 1, 10, 3, 10, 8, 5, 2],
+                                [0, 1, 10, 4, 3, 10, 7, 2]])
 
         trg_vocab = {
             0: "<sos>",
@@ -36,28 +43,27 @@ class tests(unittest.TestCase):
             10: " "
         }
 
-        obj2 = Seq2Seq_rnn(
-            vocab_size_src=10,
-            vocab_size_trg=12, 
-            dim_embed_src=120,
-            dim_embed_trg=512,
-            num_neurons_encoder=512,
-            num_neurons_decoder=512,
-            trg_map_i2c=trg_vocab,
-            eos_int=1,
-            sos_int=0
-        )
+        obj2 = Seq2Seq_rnn(vocab_size_src=10,
+                           vocab_size_trg=12,
+                           dim_embed_src=120,
+                           dim_embed_trg=512,
+                           num_neurons_encoder=512,
+                           num_neurons_decoder=512,
+                           trg_map_i2c=trg_vocab,
+                           eos_int=1,
+                           sos_int=0)
         mask_src = getMask(source_data, 1)
         mask_trg = getMask(target_data, 1)
 
-        inp_seq = np.array([[0,3,5,6,4,3,2,1]])
-        learn_rate= None
+        inp_seq = np.array([[0, 3, 5, 6, 4, 3, 2, 1]])
+        learn_rate = None
         for test_epoch in range(1000000):
             if test_epoch < 1200:
                 learn_rate = 0.01
             elif test_epoch > 1200 and test_epoch < 1700:
                 learn_rate = 0.005
-            lossVal = obj2._forward(source_data, target_data, mask_src, mask_trg)
+            lossVal = obj2._forward(source_data, target_data, mask_src,
+                                    mask_trg)
             lossVal = objLoss(lossVal)
             obj2._backward(learn_rate)
             output = obj2.predict(inp_seq)
@@ -65,20 +71,17 @@ class tests(unittest.TestCase):
             print(output)
             print(test_epoch)
             if test_epoch % 1000 == 0:
-                show_param_norms(obj2.Encoder, obj2.Decoder, test_epoch)   
-
-
+                show_param_norms(obj2.Encoder, obj2.Decoder, test_epoch)
 
 
 def show_param_norms(enc, dec, e):
-
     def getParams(obj):
-        waa, wax, ba= obj.rnn_cell.Waa, obj.rnn_cell.Wax, obj.rnn_cell.ba
+        waa, wax, ba = obj.rnn_cell.Waa, obj.rnn_cell.Wax, obj.rnn_cell.ba
         return waa, wax, ba
 
     def getNorms(obj):
-        return [np.linalg.norm(x,2) for x in obj]
-    
+        return [np.linalg.norm(x, 2) for x in obj]
+
     x = ['waa', 'wax', 'ba']
     waa_enc, wax_enc, ba_enc = getParams(enc)
     waa_dec, wax_dec, ba_dec = getParams(dec)
@@ -92,15 +95,19 @@ def show_param_norms(enc, dec, e):
     bar_width = 0.35
     opacity = 0.8
 
-    rects1 = plt.bar(index, norms_enc, bar_width,
-    alpha=opacity,
-    color='b',
-    label='Encoder')
+    rects1 = plt.bar(index,
+                     norms_enc,
+                     bar_width,
+                     alpha=opacity,
+                     color='b',
+                     label='Encoder')
 
-    rects2 = plt.bar(index + bar_width, norms_dec, bar_width,
-    alpha=opacity,
-    color='g',
-    label='Decoder')
+    rects2 = plt.bar(index + bar_width,
+                     norms_dec,
+                     bar_width,
+                     alpha=opacity,
+                     color='g',
+                     label='Decoder')
 
     plt.xlabel('Parameters')
     plt.ylabel('Norms')
@@ -108,8 +115,10 @@ def show_param_norms(enc, dec, e):
     plt.xticks(index + bar_width, x)
     plt.legend()
     plt.tight_layout()
-    fig.savefig("Seq2Seq Encoder and Decoder parameter norms at epoch %s"%(e))
+    fig.savefig("Seq2Seq Encoder and Decoder parameter norms at epoch %s" %
+                (e))
     plt.close()
 
+
 if __name__ == "__main__":
-    unittest.main() 
+    unittest.main()
