@@ -8,20 +8,36 @@ import copy
 
 class RNN_cell(Layer):
     """
-    This class represents a basic recurrent neural network cell utilizing the tanh
-    activation function.  
+    This class represents a basic recurrent neural network cell
+    utilizing the tanh activation function.
 
-    Inputs:
-        -> dim_in (int): Integer representing the number of features the input to the cell has 
-        -> num_neurons (int): Integer representing the number of features to be learned at 
-        this layer
-        -> optim (class): Optimizer used to learn the parameters during training 
-        -> embedding_layer (Embedding_layer): Object used to embed the input vectors into a lower dimensional
-        space. If predicting, the weights for this layer will be used for the softmax projection layer as well. 
-        -> predict (boolean): Boolean indicating whether or not this cell should feed its
-        output to a softmax classifier. Needed for decoder in seq2seq model but encoder is not predicting 
-        -> costFunction (Function|None): Function representing the cost when training. Needed for decoder
-        in seq2seq model but encoder has no associated cost. 
+    Attributes:
+        dim_in:
+            Integer representing the number of features the input to the cell
+            has
+
+        num_neurons:
+            Integer representing the number of features to be learned at
+            this layer
+
+        optim:
+            Object representing the optimizer used to learn the parameters
+            during training
+
+        embedding_layer:
+            Object used to embed the input vectors into a lower dimensional
+            space. If predicting, the weights for this layer will be used for
+            the softmax projection layer as well.
+
+        predict:
+            Boolean indicating whether or not this cell should feed its
+            output to a softmax classifier. Needed for decoder in
+            seq2seq model but encoder is not predicting
+
+        costFunction:
+            Function representing the cost when training, or None if there
+            is no cost function. Needed for decoder in seq2seq model, but
+            encoder has no associated cost.
     """
 
     def __init__(self,
