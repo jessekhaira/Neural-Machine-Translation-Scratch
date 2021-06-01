@@ -21,7 +21,7 @@ setuptools.setup(
     license="MIT",
     description=
     "Python implementations using only NumPy of a sequence to sequence architecture",
-    url="https://github.com/13jk59/MachineLearning_Scratch.git",
+    url="https://github.com/13jk59/Neural-Machine-Translation-Scratch",
     packages=setuptools.find_packages(),
     install_requires=production_install,
     extras_require={"dev": development_install})
