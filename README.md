@@ -18,6 +18,6 @@ The core model is contained within one file: model/Seq2Seq_rnn.py. This file con
 ## Installation
 `
 $ git clone https://github.com/13jk59/Neural-Machine-Translation-Scratch.git
-$ cd MachineLearning_Scratch
+$ cd Neural-Machine-Translation-Scratch
 $ pip3 install -e .
 `
