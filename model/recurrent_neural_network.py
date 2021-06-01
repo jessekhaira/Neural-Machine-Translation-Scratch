@@ -4,6 +4,7 @@ from model.Utils import softmax
 from collections import OrderedDict
 from collections import deque
 import copy
+from typing import Union, Callable
 
 
 class RecurrentNeuralNetwork(Layer):
@@ -41,12 +42,13 @@ class RecurrentNeuralNetwork(Layer):
     """
 
     def __init__(self,
-                 dim_in,
-                 num_neurons,
-                 optim,
-                 embedding_layer,
-                 predict=False,
-                 costFunction=None):
+                 dim_in: int,
+                 num_neurons: int,
+                 optim: object,
+                 embedding_layer: object,
+                 predict: bool = False,
+                 costFunction: Union[Callable[[np.ndarray, np.ndarray], float],
+                                     None] = None):
         self.embedding_layer = embedding_layer
         self.Waa, self.Wax, self.ba = self._initWeights(dim_in, num_neurons)
         self.predict = predict
