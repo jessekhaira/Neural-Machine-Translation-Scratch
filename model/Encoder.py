@@ -1,5 +1,6 @@
-from model.Embedding_layer import Embedding_layer 
+from model.Embedding_layer import Embedding_layer
 from model.RNN_cell import RNN_cell
+
 
 class Encoder(object):
     """
@@ -14,21 +15,24 @@ class Encoder(object):
         -> num_neurons_encoder (int): Number of neurons in the encoder
         -> optim(class): Optimizer used to train the parameters within the model
     """
-    def __init__(self, vocab_size_src, dim_embed_src, num_neurons_encoder, optim):
-        self.embedding_layer = Embedding_layer(dim_in = vocab_size_src, embed_dim=dim_embed_src, optim=optim)
-        self.rnn_cell = RNN_cell(dim_in = dim_embed_src, num_neurons = num_neurons_encoder, optim = optim, embedding_layer = self.embedding_layer)
-    
+
+    def __init__(self, vocab_size_src, dim_embed_src, num_neurons_encoder,
+                 optim):
+        self.embedding_layer = Embedding_layer(dim_in=vocab_size_src,
+                                               embed_dim=dim_embed_src,
+                                               optim=optim)
+        self.rnn_cell = RNN_cell(dim_in=dim_embed_src,
+                                 num_neurons=num_neurons_encoder,
+                                 optim=optim,
+                                 embedding_layer=self.embedding_layer)
+
     def __call__(self, x, mask):
         # Shape: (M, num_neurons_encoder) containing activations that hopefully encode
         # all the words in every sequence in the source language well
-        _ ,_ ,encoded_matrix = self.rnn_cell._forward(x, mask=mask)
+        _, _, encoded_matrix = self.rnn_cell._forward(x, mask=mask)
         return encoded_matrix
-
 
     def _backward(self, dA_encodedVector, learn_rate):
         # Shape: (M, dim_embed_src)
-        self.rnn_cell._backward(gradient_ahead=dA_encodedVector, learn_rate=learn_rate)    
-        
-
-
-        
+        self.rnn_cell._backward(gradient_ahead=dA_encodedVector,
+                                learn_rate=learn_rate)

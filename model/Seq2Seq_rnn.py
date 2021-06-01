@@ -1,13 +1,14 @@
 from model.Encoder import Encoder
-from model.Decoder import Decoder 
+from model.Decoder import Decoder
 from model.Utils import GradientDescentMomentum
 from model.Utils import crossEntropy
 from model.Utils import getMask
 from model.Utils import smoothLoss
-import torch 
-import numpy as np 
+import torch
+import numpy as np
 from tqdm import tqdm
-from collections import deque 
+from collections import deque
+
 
 class Seq2Seq_rnn(object):
     """
@@ -30,34 +31,36 @@ class Seq2Seq_rnn(object):
         -> num_neurons_encoder (int): Number of neurons in the encoder
         -> optim(class): Optimizer used to train the parameters within the model
         -> num_neurons_decoder (int): Number of neurons in the decoder 
-    """ 
-    def __init__(self,  
-                vocab_size_src, 
-                vocab_size_trg, 
-                eos_int,
-                sos_int,
-                dim_embed_src=512, 
-                src_map_i2c = None, 
-                trg_map_i2c= None, 
-                dim_embed_trg=512, 
-                num_neurons_encoder=512, 
-                num_neurons_decoder=512,
-                optim = GradientDescentMomentum):
+    """
+
+    def __init__(self,
+                 vocab_size_src,
+                 vocab_size_trg,
+                 eos_int,
+                 sos_int,
+                 dim_embed_src=512,
+                 src_map_i2c=None,
+                 trg_map_i2c=None,
+                 dim_embed_trg=512,
+                 num_neurons_encoder=512,
+                 num_neurons_decoder=512,
+                 optim=GradientDescentMomentum):
         assert dim_embed_trg == num_neurons_decoder, "For weight tying, the number of neurons in the decoder has to be the same as the number of dimensions in the embedding"
-        # These don't have to be equal. If they aren't, you will need an additional weight matrix after the encoder to project down or up to the 
+        # These don't have to be equal. If they aren't, you will need an additional weight matrix after the encoder to project down or up to the
         # dimensionality of the decoder, adding extra complexity. Kept symmetric for simplicities sake
         assert num_neurons_decoder == num_neurons_encoder, "Currently this model only supports symmetric decoders and encoders"
         self.src_dim = vocab_size_src
         self.trg_map_i2c = trg_map_i2c
         self.src_map_i2c = src_map_i2c
-        self.optim = optim 
-        self.Encoder = Encoder(vocab_size_src, dim_embed_src, num_neurons_encoder, optim)
-        self.Decoder = Decoder(vocab_size_trg, dim_embed_trg, num_neurons_decoder, optim)
+        self.optim = optim
+        self.Encoder = Encoder(vocab_size_src, dim_embed_src,
+                               num_neurons_encoder, optim)
+        self.Decoder = Decoder(vocab_size_trg, dim_embed_trg,
+                               num_neurons_decoder, optim)
         self.eos_int = eos_int
         self.sos_int = sos_int
 
-
-    def _forward(self, x,y, mask_src, mask_trg):
+    def _forward(self, x, y, mask_src, mask_trg):
         """
         This method computes the forward pass through the sequence to sequence model, 
         producing a loss value and a predictions vector.
@@ -78,31 +81,29 @@ class Seq2Seq_rnn(object):
         """
         encoded_batch = self.Encoder(x, mask_src)
         loss = self.Decoder(encoded_batch, y, mask_trg)
-        return loss 
-
+        return loss
 
     def _backward(self, learn_rate):
         """
         This method computes the backward pass through the network.
         """
         # vector containing the gradient dL/dA for the encoded vector produced at last time
-        # step for encoder 
+        # step for encoder
         dA_encodedVector = self.Decoder._backward(learn_rate)
         self.Encoder._backward(dA_encodedVector, learn_rate)
 
-
-    def train (self, 
-            data_loader, 
-            batch_size,
-            src_name, 
-            trg_name, 
-            padding_idx, 
-            valid_loader = None, 
-            learn_rate = 0.1, 
-            learning_schedule = None, 
-            num_epochs=100, 
-            verbose =1,
-            _testing= None):
+    def train(self,
+              data_loader,
+              batch_size,
+              src_name,
+              trg_name,
+              padding_idx,
+              valid_loader=None,
+              learn_rate=0.1,
+              learning_schedule=None,
+              num_epochs=100,
+              verbose=1,
+              _testing=None):
         """
         This method is used to train the seq2seq rnn model in batches. This method expects the data
         to come in as an iterator, and the batches to come in as an object like TorchText's 
@@ -132,11 +133,11 @@ class Seq2Seq_rnn(object):
             -> _testing (int | None): During testing, parameter used to ensure model can do well on a small number of 
             examples. So if one epoch has say 56 batches, instead of going through all 56 batches, we only go through testing
             batches in a single epoch. 
-        """ 
-        training_losses = [] 
-        validation_losses = [] 
-        smoothLossTrain = smoothLoss(0.1) 
-        smoothLossValid = smoothLoss(0.1) 
+        """
+        training_losses = []
+        validation_losses = []
+        smoothLossTrain = smoothLoss(0.1)
+        smoothLossValid = smoothLoss(0.1)
         for epoch in tqdm(range(num_epochs)):
             epoch_loss = []
             for i, batch in enumerate(data_loader):
@@ -145,14 +146,15 @@ class Seq2Seq_rnn(object):
 
                 # Shape (M,T_src)
                 if verbose:
-                    print('Entering epoch: %s, batch number %s!'%(epoch, i))
+                    print('Entering epoch: %s, batch number %s!' % (epoch, i))
                 src_train = getattr(batch, src_name)
                 # Shape (M,T_trg)
                 trg_train = getattr(batch, trg_name)
-                
+
                 # make sure we have np arrays and shapes of arrays are (M,T)
-                src_train, trg_train = self._preprocessBatch(src_train, trg_train, batch_size)
-                
+                src_train, trg_train = self._preprocessBatch(
+                    src_train, trg_train, batch_size)
+
                 # Shape (batch_size, seq_len)
                 mask_src = getMask(src_train, padding_idx)
                 mask_trg = getMask(trg_train, padding_idx)
@@ -160,61 +162,67 @@ class Seq2Seq_rnn(object):
                 loss = self._forward(src_train, trg_train, mask_src, mask_trg)
                 self._backward(learn_rate)
                 epoch_loss.append(loss)
-            
-            # smoothen the loss out when training 
-            training_losses.append(smoothLossTrain(np.mean(epoch_loss)))
-            # Update learn rate after every epoch 
-            saved_lr = learn_rate
-            learn_rate = learn_rate if not learning_schedule else learning_schedule(learn_rate, epoch)
-            if learning_schedule:
-                print('old learn rate: %s, new learn rate: %s'%(saved_lr, learn_rate))
 
+            # smoothen the loss out when training
+            training_losses.append(smoothLossTrain(np.mean(epoch_loss)))
+            # Update learn rate after every epoch
+            saved_lr = learn_rate
+            learn_rate = learn_rate if not learning_schedule else learning_schedule(
+                learn_rate, epoch)
+            if learning_schedule:
+                print('old learn rate: %s, new learn rate: %s' %
+                      (saved_lr, learn_rate))
 
             # get loss w/ teacher forcing when validating
             if valid_loader:
-                batch_losses = [] 
-                
+                batch_losses = []
+
                 for i, batch in enumerate(valid_loader):
                     if i == _testing:
-                        break 
+                        break
                     srcV = getattr(batch, src_name)
-                    trgV = getattr(batch, trg_name) 
+                    trgV = getattr(batch, trg_name)
                     srcV, trgV = self._preprocessBatch(srcV, trgV, batch_size)
                     mask_srcV = getMask(srcV, padding_idx)
                     mask_trgV = getMask(trgV, padding_idx)
 
-                    
-
-                    if i%100 ==0 and verbose:
-                        input_sentence = " ".join(list(map(lambda x: self.src_map_i2c[x], srcV[0])))
+                    if i % 100 == 0 and verbose:
+                        input_sentence = " ".join(
+                            list(map(lambda x: self.src_map_i2c[x], srcV[0])))
                         predicted = self.predict(srcV[0:1])
                         print(predicted)
-                        print('Batch %s, input_sentence: %s translated sentence: %s'%(i, input_sentence, predicted))
-        
+                        print(
+                            'Batch %s, input_sentence: %s translated sentence: %s'
+                            % (i, input_sentence, predicted))
+
                     loss = self._forward(srcV, trgV, mask_srcV, mask_trgV)
                     batch_losses.append(loss)
-                
+
                 validation_losses.append(smoothLossValid(np.mean(batch_losses)))
 
             if verbose and valid_loader:
-                print('Epoch num: %s, Train Loss: %s, Validation Loss: %s'%(epoch, training_losses[-1], validation_losses[-1]))
+                print('Epoch num: %s, Train Loss: %s, Validation Loss: %s' %
+                      (epoch, training_losses[-1], validation_losses[-1]))
             if verbose:
-                 print('Epoch num: %s, Train Loss: %s'%(epoch, training_losses[-1]))
+                print('Epoch num: %s, Train Loss: %s' %
+                      (epoch, training_losses[-1]))
 
         return training_losses, validation_losses
 
-    
     def _preprocessBatch(self, x1, x2, batch_size):
         if type(x1) == torch.Tensor:
             x1 = x1.numpy()
-            x2 = x2.numpy() 
+            x2 = x2.numpy()
         if x1.shape[0] != batch_size:
-            x1 = x1.T 
-            x2 = x2.T 
+            x1 = x1.T
+            x2 = x2.T
         return x1, x2
 
-
-    def predict(self, inp_seq, length_normalization = 0.75, beam_width=3, max_seq_len = 20):
+    def predict(self,
+                inp_seq,
+                length_normalization=0.75,
+                beam_width=3,
+                max_seq_len=20):
         """
         This method carries out translation from a source language to a target language
         when given a vector of integers in the source language (that should belong to the same vocabulary
@@ -236,35 +244,12 @@ class Seq2Seq_rnn(object):
         Outputs:
             -> String containing the decoded vector by the network 
         """
-        assert inp_seq.max() < self.src_dim, "The sequence has to belong to the same vocabulary as the model was trained on!"
+        assert inp_seq.max(
+        ) < self.src_dim, "The sequence has to belong to the same vocabulary as the model was trained on!"
         encoded = self.Encoder(inp_seq, None)
-        output_ints = self.Decoder.beamSearch(encoded, self.eos_int, self.sos_int, length_normalization, beam_width, max_seq_len)
+        output_ints = self.Decoder.beamSearch(encoded, self.eos_int,
+                                              self.sos_int,
+                                              length_normalization, beam_width,
+                                              max_seq_len)
         output_sentence = list(map(lambda x: self.trg_map_i2c[x], output_ints))
         return "".join(output_sentence)
-        
-    
-
-
-
-
-    
-
-
-
-        
-
-
-
-
-
-
-
-
-
-
-                    
-
-
-
-
-

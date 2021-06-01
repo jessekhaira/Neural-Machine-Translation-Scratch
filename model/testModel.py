@@ -75,6 +75,7 @@ class tests(unittest.TestCase):
 
 
 def show_param_norms(enc, dec, e):
+
     def getParams(obj):
         waa, wax, ba = obj.rnn_cell.Waa, obj.rnn_cell.Wax, obj.rnn_cell.ba
         return waa, wax, ba
@@ -115,8 +116,7 @@ def show_param_norms(enc, dec, e):
     plt.xticks(index + bar_width, x)
     plt.legend()
     plt.tight_layout()
-    fig.savefig("Seq2Seq Encoder and Decoder parameter norms at epoch %s" %
-                (e))
+    fig.savefig("Seq2Seq Encoder and Decoder parameter norms at epoch %s" % (e))
     plt.close()
 
 

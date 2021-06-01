@@ -23,6 +23,7 @@ class RNN_cell(Layer):
         -> costFunction (Function|None): Function representing the cost when training. Needed for decoder
         in seq2seq model but encoder has no associated cost. 
     """
+
     def __init__(self,
                  dim_in,
                  num_neurons,
@@ -122,8 +123,8 @@ class RNN_cell(Layer):
             # In our get_mask function, we have vector != padding_idx, so if a value is False, that means
             # its a padding vector
             if curr_mask is not None:
-                activation_timestep[curr_mask == False, :] = a_prev[
-                    curr_mask == False, :]
+                activation_timestep[curr_mask == False, :] = a_prev[curr_mask ==
+                                                                    False, :]
 
             self.time_cache[t] = {
                 "activation_timestep": activation_timestep,
@@ -394,7 +395,7 @@ class RNN_cell(Layer):
                 # at this timestep, then add them to the log(prob) of all previous timesteps and find the maximum b probs
                 # along with the indices (i,j) they occurr at
                 log_probs = np.array([v[0][1] for v in current_beams.values()
-                                      ]).reshape(iteration_beam, 1)
+                                     ]).reshape(iteration_beam, 1)
                 probabilities = np.log(probabilities)
                 probabilities += log_probs
                 # we need to determine the probability of the max words in this matrix along with the sequence they belong to
@@ -405,8 +406,7 @@ class RNN_cell(Layer):
                 rows_cols_maxProbabilites = np.unravel_index(
                     (-probabilities).flatten().argsort()[:iteration_beam],
                     probabilities.shape)
-                max_sequence_logprobs = probabilities[
-                    rows_cols_maxProbabilites]
+                max_sequence_logprobs = probabilities[rows_cols_maxProbabilites]
                 curr_beam = 0
                 new_beams = {}
                 for seq_logprob, seq_idx, vocab_idx in zip(
