@@ -61,8 +61,8 @@ class TestSeq2SeqRNN(unittest.TestCase):
             print(lossVal)
             print(output)
             print(test_epoch)
-            if test_epoch % 1000 == 0:
-                show_param_norms(obj2.Encoder, obj2.Decoder, test_epoch)
+            # if test_epoch % 1000 == 0:
+            #     show_param_norms(obj2.Encoder, obj2.Decoder, test_epoch)
 
 
 def show_param_norms(enc, dec, e):
