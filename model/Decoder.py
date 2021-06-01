@@ -1,21 +1,30 @@
+""" This module contains code for a class representing a decoder
+neural network, meant to be used inside a sequence to sequence
+architecture"""
 from model.Embedding_layer import Embedding_layer
 from model.RNN_cell import RNN_cell
 from model.Utils import crossEntropy
 
 
 class Decoder(object):
-    """
-    This class represents the Decoder used in a sequence to sequence recurrent neural
-    network.
+    """ This class represents the Decoder used in a sequence to sequence
+    recurrent neural network.
 
-    The decoders job is to recieve an encoded vector in some source language, and translate
-    that to a decoded vector in a target language
+    The decoders job is to recieve an encoded vector in some source
+    language, and translate that to a decoded vector in a target language
 
-    Inputs:
-        -> vocab_size_trg (int): Size of the target language vocabulary
-        -> dim_embed_trg (int): Size of the embeddings for the decoder
-        -> optim (class): Optimizer used to train the parameters within the model
-        -> num_neurons_decoder (int): Number of neurons in the decoder 
+    Attributes:
+        vocab_size_trg:
+            Integer representing the size of the target language vocabulary
+
+        dim_embed_trg:
+            Integer representing the size of the embeddings for the decoder
+
+        optim:
+            Object used to train the parameters within the model
+
+        num_neurons_decoder:
+            Integer representing the number of neurons in the decoder
     """
 
     def __init__(self, vocab_size_trg, dim_embed_trg, num_neurons_decoder,
