@@ -16,8 +16,8 @@ The purpose of the repo was to deepen my understanding of RNNs, learn about spec
 The core model is contained within one file: model/Seq2Seq_rnn.py. This file contains the overall sequence to sequence model definition, along with a useful method to train the model that expects a data loader containing batches of source sequences and target sequences (can be easily done with TorchText!). Example usage is shown [here](https://github.com/13jk59/Neural-Machine-Translation-Scratch/blob/master/model/tests/test_batched_mt_rnn.ipynb). 
 
 ## Installation
-`
-$ git clone https://github.com/13jk59/Neural-Machine-Translation-Scratch.git<br>
+```
+$ git clone https://github.com/13jk59/Neural-Machine-Translation-Scratch.git
 $ cd Neural-Machine-Translation-Scratch
 $ pip3 install -e .
-`
+```
