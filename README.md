@@ -4,7 +4,7 @@
 
 This repo contains code for a sequence to sequence model implemented from scratch in NumPy. The model implemented contains two neural networks: an encoder network and a decoder network. Within this model, a plain RNN cell was used for both of these networks in the configuration shown below. 
 
-<img src="./encoder_decoder.jpg">
+<img src="./images/encoder_decoder.jpg">
 
 In addition to the primary model, I also implemented: 
 * An efficient embedding layer(no one hot encoded vectors!)
