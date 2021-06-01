@@ -27,8 +27,8 @@ class Decoder(object):
             Integer representing the number of neurons in the decoder
     """
 
-    def __init__(self, vocab_size_trg, dim_embed_trg, num_neurons_decoder,
-                 optim):
+    def __init__(self, vocab_size_trg: int, dim_embed_trg: int,
+                 num_neurons_decoder: int, optim: object):
         self.embedding_layer = Embedding_layer(vocab_size_trg, dim_embed_trg,
                                                optim)
         # for the decoder, we're going to tie the weights of the embedding layer and the linear projection
