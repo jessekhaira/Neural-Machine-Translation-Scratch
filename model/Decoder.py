@@ -2,7 +2,7 @@
 neural network, meant to be used inside a sequence to sequence
 architecture"""
 from model.Embedding_layer import Embedding_layer
-from model.RNN_cell import RNN_cell
+from model.recurrent_neural_network import RecurrentNeuralNetwork
 from model.Utils import crossEntropy
 
 
@@ -34,12 +34,12 @@ class Decoder(object):
         # for the decoder, we're going to tie the weights of the embedding layer and the linear projection
         # before softmax activation. If vocab_size_src and vocab_size_trg are same as well, its possible to tie all
         # the weights but not done here for simplicity of implementation . See: https://arxiv.org/abs/1608.05859
-        self.rnn_cell = RNN_cell(dim_embed_trg,
-                                 num_neurons_decoder,
-                                 optim,
-                                 self.embedding_layer,
-                                 predict=True,
-                                 costFunction=crossEntropy)
+        self.rnn_cell = RecurrentNeuralNetwork(dim_embed_trg,
+                                               num_neurons_decoder,
+                                               optim,
+                                               self.embedding_layer,
+                                               predict=True,
+                                               costFunction=crossEntropy)
 
     def __call__(self, encoded_batch, target_language_seqs, mask):
         """

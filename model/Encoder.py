@@ -1,5 +1,5 @@
 from model.Embedding_layer import Embedding_layer
-from model.RNN_cell import RNN_cell
+from model.recurrent_neural_network import RecurrentNeuralNetwork
 
 
 class Encoder(object):
@@ -21,10 +21,11 @@ class Encoder(object):
         self.embedding_layer = Embedding_layer(dim_in=vocab_size_src,
                                                embed_dim=dim_embed_src,
                                                optim=optim)
-        self.rnn_cell = RNN_cell(dim_in=dim_embed_src,
-                                 num_neurons=num_neurons_encoder,
-                                 optim=optim,
-                                 embedding_layer=self.embedding_layer)
+        self.rnn_cell = RecurrentNeuralNetwork(
+            dim_in=dim_embed_src,
+            num_neurons=num_neurons_encoder,
+            optim=optim,
+            embedding_layer=self.embedding_layer)
 
     def __call__(self, x, mask):
         # Shape: (M, num_neurons_encoder) containing activations that hopefully encode

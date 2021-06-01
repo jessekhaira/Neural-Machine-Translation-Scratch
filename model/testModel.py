@@ -1,23 +1,14 @@
 import unittest
-from Seq2Seq_rnn import Seq2Seq_rnn
+from model.Seq2Seq_rnn import Seq2Seq_rnn
 import numpy as np
-from Utils import getMask
-from Utils import crossEntropy
+from model.Utils import getMask
 import matplotlib.pyplot as plt
 from model.Utils import smoothLoss
-from model.Utils import GradientDescentMomentum
-from model.Utils import exponentialDecaySchedule
-from model.Seq2Seq_rnn import Seq2Seq_rnn
-from torchtext.data import Field
-from torchtext.data import TabularDataset
-from torchtext.data import BucketIterator
-from sklearn.model_selection import train_test_split
-from model.Seq2Seq_rnn import Seq2Seq_rnn
 
 objLoss = smoothLoss()
 
 
-class tests(unittest.TestCase):
+class TestSeq2SeqRNN(unittest.TestCase):
     # This test ensures sure that the forward pass and backward pass are all wired up correctly
     # for both the encoder and decoder, along with testing out beam search.
     # Achieving ~0 loss should be trivial if the algorithm is coded up currently, and it is!
