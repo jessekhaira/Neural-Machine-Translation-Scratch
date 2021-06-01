@@ -2,7 +2,7 @@
 
 ## Description  
 
-This repo contains code for a sequence to sequence model implemented from scratch in NumPy. The model implemented contains two neural networks: an encoder network and a decoder network. Within this model, a plain RNN cell was used for both of these networks in the configuration shown below. 
+This repo contains code for a sequence to sequence model implemented from scratch in python using NumPy. The model implemented contains two neural networks: an encoder network and a decoder network. Within the model, a plain RNN cell was used for both of these networks in the configuration shown below. 
 
 <img src="./images/encoder_decoder.jpg">
 
