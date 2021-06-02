@@ -1,3 +1,5 @@
+""" This module contains code for a class that represents a vanilla
+recurrent neural network """
 from model.Utils import Layer
 from model.Embedding_layer import Embedding_layer
 from model.Utils import softmax
