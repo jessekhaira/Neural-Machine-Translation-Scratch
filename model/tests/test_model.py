@@ -1,5 +1,5 @@
 import unittest
-from model.sequence_to_sequence_network import Seq2Seq_rnn
+from model.sequence_to_sequence_network import SequenceToSequenceRecurrentNetwork
 import numpy as np
 from model.Utils import getMask
 import matplotlib.pyplot as plt
@@ -34,15 +34,15 @@ class TestSeq2SeqRNN(unittest.TestCase):
             10: " "
         }
 
-        obj2 = Seq2Seq_rnn(vocab_size_src=10,
-                           vocab_size_trg=12,
-                           dim_embed_src=120,
-                           dim_embed_trg=512,
-                           num_neurons_encoder=512,
-                           num_neurons_decoder=512,
-                           trg_map_i2c=trg_vocab,
-                           eos_int=1,
-                           sos_int=0)
+        obj2 = SequenceToSequenceRecurrentNetwork(vocab_size_src=10,
+                                                  vocab_size_trg=12,
+                                                  dim_embed_src=120,
+                                                  dim_embed_trg=512,
+                                                  num_neurons_encoder=512,
+                                                  num_neurons_decoder=512,
+                                                  trg_map_i2c=trg_vocab,
+                                                  eos_int=1,
+                                                  sos_int=0)
         mask_src = getMask(source_data, 1)
         mask_trg = getMask(target_data, 1)
 
@@ -61,8 +61,8 @@ class TestSeq2SeqRNN(unittest.TestCase):
             print(lossVal)
             print(output)
             print(test_epoch)
-            # if test_epoch % 1000 == 0:
-            #     show_param_norms(obj2.Encoder, obj2.Decoder, test_epoch)
+            if test_epoch % 1000 == 0:
+                show_param_norms(obj2.Encoder, obj2.Decoder, test_epoch)
 
 
 def show_param_norms(enc, dec, e):

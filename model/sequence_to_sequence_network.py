@@ -10,7 +10,7 @@ from tqdm import tqdm
 from collections import deque
 
 
-class Seq2Seq_rnn(object):
+class SequenceToSequenceRecurrentNetwork(object):
     """
     This class represents a sequence to sequence model used for the task of machine translation, trained
     in batches. 
