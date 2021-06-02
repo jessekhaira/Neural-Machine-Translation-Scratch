@@ -1,3 +1,5 @@
+""" This module contains a class representing a sequence to sequence
+network meant to be used for the task of language translation """
 from model.Encoder import Encoder
 from model.Decoder import Decoder
 from model.Utils import GradientDescentMomentum
@@ -9,26 +11,53 @@ from tqdm import tqdm
 
 
 class SequenceToSequenceRecurrentNetwork(object):
-    """
-    This class represents a sequence to sequence model used for the task of machine translation, trained
-    in batches. 
+    """ This class represents a sequence to sequence model used
+    for the task of machine translation, trained in batches.
 
-    The architecture is as follows: we feed in an input sequence in a source language to the encoder, and get an encoded
-    vector from the encoder. We feed that encoded vector into a decoder network which will output predictions
-    of the word it thinks is the most likely in the target language. 
+    The architecture is as follows: we feed in an input sequence
+    in a source language to the encoder, and get an encoded vector
+    from the encoder. We feed that encoded vector into a decoder
+    network which will output predictions of the word it thinks is
+    the most likely in the target language.
 
-    Inputs:
-        -> eos_int (int): Integer representing the index which the end of sequence token occupies in the target vocab
-        -> sos_int (int): Integer representing the index which the start of sequence token occupies in the target vocab
-        -> vocab_size_src (int): Size of the source language vocabulary
-        -> vocab_size_trg (int): Size of the target language vocabulary
-        -> dim_embed_src (int): Size of the embeddings for the encoder 
-        -> src_map_i2c (HashMap<Integer, Token> | None): Mapping from integers to tokens for source language
-        -> trg_map_i2c (HashMap<Integer, Token> | None): Mapping from integers to tokens for target language 
-        -> dim_embed_trg (int): Size of the embeddings for the decoder. Kep t
-        -> num_neurons_encoder (int): Number of neurons in the encoder
-        -> optim(class): Optimizer used to train the parameters within the model
-        -> num_neurons_decoder (int): Number of neurons in the decoder 
+    Attributes:
+        eos_int:
+            Integer representing the index which the end of sequence
+            token occupies in the target vocab
+
+        sos_int:
+            Integer representing the index which the start of sequence
+            token occupies in the target vocab
+
+        vocab_size_src:
+            Integer representing the size of the source language vocabulary
+
+        vocab_size_trg:
+            Integer representing the size of the target language vocabulary
+
+        dim_embed_src:
+            Integer representing the size of the embeddings for the encoder
+
+        src_map_i2c:
+            Dictionary containing a mapping between integers to tokens for
+            the source language. Default value is None.
+
+        trg_map_i2c:
+            Dictionary containing a mapping between integers to tokens for
+            for the target language. Default value is None.
+
+        dim_embed_trg:
+            Integer representing the size of the embeddings for the decoder
+
+        num_neurons_encoder:
+            Integer representing the number of neurons in the encoder
+
+        optim:
+            Object representing the optimizer used to train the parameters
+            within the model
+
+        num_neurons_decoder:
+            Integer representing the number of neurons in the decoder
     """
 
     def __init__(self,
