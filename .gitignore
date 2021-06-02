@@ -6,3 +6,4 @@
 *.egg-info
 train.csv
 valid.csv
+*.pyc

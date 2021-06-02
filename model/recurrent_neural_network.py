@@ -1,10 +1,11 @@
 from model.Utils import Layer
-import numpy as np
+from model.Embedding_layer import Embedding_layer
 from model.Utils import softmax
 from collections import OrderedDict
 from collections import deque
-import copy
 from typing import Union, Callable
+import copy
+import numpy as np
 
 
 class RecurrentNeuralNetwork(Layer):
@@ -45,7 +46,7 @@ class RecurrentNeuralNetwork(Layer):
                  dim_in: int,
                  num_neurons: int,
                  optim: object,
-                 embedding_layer: object,
+                 embedding_layer: Embedding_layer,
                  predict: bool = False,
                  costFunction: Union[Callable[[np.ndarray, np.ndarray], float],
                                      None] = None):
