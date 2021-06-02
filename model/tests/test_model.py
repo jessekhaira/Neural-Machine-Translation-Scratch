@@ -1,5 +1,5 @@
 import unittest
-from model.Seq2Seq_rnn import Seq2Seq_rnn
+from model.sequence_to_sequence_network import Seq2Seq_rnn
 import numpy as np
 from model.Utils import getMask
 import matplotlib.pyplot as plt
