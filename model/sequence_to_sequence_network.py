@@ -1,13 +1,11 @@
 from model.Encoder import Encoder
 from model.Decoder import Decoder
 from model.Utils import GradientDescentMomentum
-from model.Utils import crossEntropy
 from model.Utils import getMask
 from model.Utils import smoothLoss
 import torch
 import numpy as np
 from tqdm import tqdm
-from collections import deque
 
 
 class SequenceToSequenceRecurrentNetwork(object):
