@@ -8,6 +8,7 @@ from model.Utils import smoothLoss
 import torch
 import numpy as np
 from tqdm import tqdm
+from typing import Union, Dict
 
 
 class SequenceToSequenceRecurrentNetwork(object):
@@ -61,21 +62,27 @@ class SequenceToSequenceRecurrentNetwork(object):
     """
 
     def __init__(self,
-                 vocab_size_src,
-                 vocab_size_trg,
-                 eos_int,
-                 sos_int,
-                 dim_embed_src=512,
-                 src_map_i2c=None,
-                 trg_map_i2c=None,
-                 dim_embed_trg=512,
-                 num_neurons_encoder=512,
-                 num_neurons_decoder=512,
-                 optim=GradientDescentMomentum):
-        assert dim_embed_trg == num_neurons_decoder, "For weight tying, the number of neurons in the decoder has to be the same as the number of dimensions in the embedding"
-        # These don't have to be equal. If they aren't, you will need an additional weight matrix after the encoder to project down or up to the
-        # dimensionality of the decoder, adding extra complexity. Kept symmetric for simplicities sake
-        assert num_neurons_decoder == num_neurons_encoder, "Currently this model only supports symmetric decoders and encoders"
+                 vocab_size_src: int,
+                 vocab_size_trg: int,
+                 eos_int: int,
+                 sos_int: int,
+                 dim_embed_src: int = 512,
+                 src_map_i2c: Union[Dict[int, str], None] = None,
+                 trg_map_i2c: Union[Dict[int, str], None] = None,
+                 dim_embed_trg: int = 512,
+                 num_neurons_encoder: int = 512,
+                 num_neurons_decoder: int = 512,
+                 optim: object = GradientDescentMomentum):
+        assert dim_embed_trg == num_neurons_decoder, (
+            "For weight tying, the number of neurons in the decoder has to be" +
+            "the same as the number of dimensions in the embedding")
+        # These don't have to be equal. If they aren't, you will need an
+        # additional weight matrix after the encoder to project down or
+        # up to the dimensionality of the decoder, adding extra complexity.
+        # Kept symmetric for simplicities sake
+        assert num_neurons_decoder == num_neurons_encoder, (
+            "Currently this model only supports symmetric decoders and encoders"
+        )
         self.src_dim = vocab_size_src
         self.trg_map_i2c = trg_map_i2c
         self.src_map_i2c = src_map_i2c
