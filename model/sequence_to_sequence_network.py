@@ -94,7 +94,8 @@ class SequenceToSequenceRecurrentNetwork(object):
         self.eos_int = eos_int
         self.sos_int = sos_int
 
-    def _forward(self, x, y, mask_src, mask_trg):
+    def _forward(self, x: np.ndarray, y: np.ndarray, mask_src: np.ndarray,
+                 mask_trg: np.ndarray):
         """ This method computes the forward pass through the
         sequence to sequence model, producing a loss value and
         a predictions vector.
