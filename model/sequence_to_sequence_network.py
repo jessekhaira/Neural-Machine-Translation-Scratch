@@ -8,7 +8,7 @@ from model.utils import smoothLoss
 import torch
 import numpy as np
 from tqdm import tqdm
-from typing import Union, Dict
+from typing import Union, Dict, Tuple
 
 
 class SequenceToSequenceRecurrentNetwork(object):
@@ -95,7 +95,7 @@ class SequenceToSequenceRecurrentNetwork(object):
         self.sos_int = sos_int
 
     def _forward(self, x: np.ndarray, y: np.ndarray, mask_src: np.ndarray,
-                 mask_trg: np.ndarray):
+                 mask_trg: np.ndarray) -> Tuple[float, np.ndarray]:
         """ This method computes the forward pass through the
         sequence to sequence model, producing a loss value and
         a predictions vector.
@@ -124,9 +124,9 @@ class SequenceToSequenceRecurrentNetwork(object):
                 Function to minimize during training
 
         Returns:
-            An integer representing the loss on the batch of input examples,
-            and a numpy matrix containing the probabilistic predictions for
-            every vector in the batch
+            A floating point value representing the loss on the batch of
+            input examples, and a numpy matrix containing the probabilistic
+            predictions for every vector in the batch
         """
         encoded_batch = self.encoder(x, mask_src)
         loss = self.decoder(encoded_batch, y, mask_trg)
@@ -152,20 +152,22 @@ class SequenceToSequenceRecurrentNetwork(object):
               num_epochs=100,
               verbose=1,
               _testing=None):
-        """
-        This method is used to train the seq2seq rnn model in batches. This method expects the data
-        to come in as an iterator, and the batches to come in as an object like TorchText's 
-        bucket iterator produces. Each batch object should have properties of batch.src_name 
-        and batch.trg_name that contain the data for the source and target languages. So with 
+        """ This method is used to train the seq2seq rnn model in batches.
+        This method expects the data to come in as an iterator, and the batches
+        to come in as an object like TorchText's bucket iterator produces. Each
+        batch object should have properties of batch.src_name and batch.trg_name
+        that contain the data for the source and target languages. So with
         the data_loader, we can access the data as:
 
         for curr_batch, (batch) in enumerate(data_loader):
-            batch.src_name -> produces tensor of shape (batch_size, seq_len) of the source language
-            batch.trg_name -> produces tensor of shape (batch_size, seq_len) of the target language
-        
-        Same idea for the valid_loader. 
+            batch.src_name -> produces tensor of shape (batch_size, seq_len) of
+                              the source language
+            batch.trg_name -> produces tensor of shape (batch_size, seq_len) of
+                              the target language
 
-        Inputs:
+        Same idea for the valid_loader.
+
+        Args:
             -> data_loader (Iterator): Iterator for the data used to train the model in batches
             -> batch_size (int): Size of the batches used within an epoch 
             -> valid_loader (Iterator): Iterator for the data used to validate the model in batches 
