@@ -95,23 +95,37 @@ class SequenceToSequenceRecurrentNetwork(object):
         self.sos_int = sos_int
 
     def _forward(self, x, y, mask_src, mask_trg):
-        """
-        This method computes the forward pass through the sequence to sequence model, 
-        producing a loss value and a predictions vector.
+        """ This method computes the forward pass through the
+        sequence to sequence model, producing a loss value and
+        a predictions vector.
 
-        Inputs:
-            -> x (NumPy matrix): Matrix of shape (M,N) where M is the batch size and 
-            N is the sequence length
-            -> y (NumPy vector): Vector of integers containing labels for all the examples
-            in the batch
-            -> mask_src (NumPy Matrix): Matrix indicating which timesteps belong to padding idxs for the encoder
-            -> mask_trg (NumPy Matrix): Matrix indicating which timesteps belong to padding idxs for the decoder
-            -> loss_func (Function): Function to minimize during training 
-        
-        Outputs:
-            -> loss (int): Integer representing loss on batch 
-            -> predictions (NumPy matrix): Matrix containing the probabilistic predictions for 
-            every vector in the batch 
+        M - size of batch
+        N - sequence length
+
+        Args:
+            x:
+                Numpy matrix of shape (M,N) containing feature vectors
+                for training
+
+            y:
+                Numpy vector containing integers for the labels for the
+                training vectors
+
+            mask_src:
+                Numpy matrix indicating which timesteps belong to padding
+                idxs for the encoder
+
+            mask_trg:
+                Numpy matrix indicating which timesteps belong to padding
+                idxs for the decoder
+
+            loss_func:
+                Function to minimize during training
+
+        Returns:
+            An integer representing the loss on the batch of input examples,
+            and a numpy matrix containing the probabilistic predictions for
+            every vector in the batch
         """
         encoded_batch = self.Encoder(x, mask_src)
         loss = self.Decoder(encoded_batch, y, mask_trg)
