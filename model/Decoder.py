@@ -1,9 +1,9 @@
 """ This module contains code for a class representing a decoder
 neural network, meant to be used inside a sequence to sequence
 architecture"""
-from model.Embedding_layer import Embedding_layer
+from model.embedding_layer import Embedding_layer
 from model.recurrent_neural_network import RecurrentNeuralNetwork
-from model.Utils import crossEntropy
+from model.utils import crossEntropy
 
 
 class Decoder(object):

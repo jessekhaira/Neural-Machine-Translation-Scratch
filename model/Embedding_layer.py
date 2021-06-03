@@ -1,4 +1,4 @@
-from model.Utils import Layer
+from model.utils import Layer
 import numpy as np
 
 

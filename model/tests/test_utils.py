@@ -1,15 +1,15 @@
 import unittest
-from model.Utils import softmax
-from model.Utils import smoothLoss
-from model.Utils import GradientDescentMomentum
-from model.Utils import crossEntropy
-from model.Utils import getMask
-from model.Embedding_layer import Embedding_layer
+from model.utils import softmax
+from model.utils import smoothLoss
+from model.utils import GradientDescentMomentum
+from model.utils import crossEntropy
+from model.utils import getMask
+from model.embedding_layer import Embedding_layer
 import numpy as np
 
 
 # looks fine, stepped through tests w/ debugger
-class tests(unittest.TestCase):
+class TestUtility(unittest.TestCase):
 
     def testCrossEntropy(self):
         yhat = np.array([[0.5, 0.1, 0.1, 0.3], [0.8, 0.1, 0.05, 0.05],

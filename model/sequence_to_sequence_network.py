@@ -1,10 +1,10 @@
 """ This module contains a class representing a sequence to sequence
 network meant to be used for the task of language translation """
-from model.Encoder import Encoder
-from model.Decoder import Decoder
-from model.Utils import GradientDescentMomentum
-from model.Utils import getMask
-from model.Utils import smoothLoss
+from model.encoder import Encoder
+from model.decoder import Decoder
+from model.utils import GradientDescentMomentum
+from model.utils import getMask
+from model.utils import smoothLoss
 import torch
 import numpy as np
 from tqdm import tqdm
@@ -87,9 +87,9 @@ class SequenceToSequenceRecurrentNetwork(object):
         self.trg_map_i2c = trg_map_i2c
         self.src_map_i2c = src_map_i2c
         self.optim = optim
-        self.Encoder = Encoder(vocab_size_src, dim_embed_src,
+        self.encoder = Encoder(vocab_size_src, dim_embed_src,
                                num_neurons_encoder, optim)
-        self.Decoder = Decoder(vocab_size_trg, dim_embed_trg,
+        self.decoder = Decoder(vocab_size_trg, dim_embed_trg,
                                num_neurons_decoder, optim)
         self.eos_int = eos_int
         self.sos_int = sos_int
@@ -128,18 +128,17 @@ class SequenceToSequenceRecurrentNetwork(object):
             and a numpy matrix containing the probabilistic predictions for
             every vector in the batch
         """
-        encoded_batch = self.Encoder(x, mask_src)
-        loss = self.Decoder(encoded_batch, y, mask_trg)
+        encoded_batch = self.encoder(x, mask_src)
+        loss = self.decoder(encoded_batch, y, mask_trg)
         return loss
 
-    def _backward(self, learn_rate):
-        """
-        This method computes the backward pass through the network.
+    def _backward(self, learn_rate: float):
+        """ This method computes the backward pass through the network.
         """
         # vector containing the gradient dL/dA for the encoded vector produced at last time
         # step for encoder
-        dA_encodedVector = self.Decoder._backward(learn_rate)
-        self.Encoder._backward(dA_encodedVector, learn_rate)
+        da_encoded_vector = self.decoder._backward(learn_rate)
+        self.encoder._backward(da_encoded_vector, learn_rate)
 
     def train(self,
               data_loader,
@@ -295,8 +294,8 @@ class SequenceToSequenceRecurrentNetwork(object):
         """
         assert inp_seq.max(
         ) < self.src_dim, "The sequence has to belong to the same vocabulary as the model was trained on!"
-        encoded = self.Encoder(inp_seq, None)
-        output_ints = self.Decoder.beamSearch(encoded, self.eos_int,
+        encoded = self.encoder(inp_seq, None)
+        output_ints = self.decoder.beamSearch(encoded, self.eos_int,
                                               self.sos_int,
                                               length_normalization, beam_width,
                                               max_seq_len)

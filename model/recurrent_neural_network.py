@@ -1,8 +1,8 @@
 """ This module contains code for a class that represents a vanilla
 recurrent neural network """
-from model.Utils import Layer
-from model.Embedding_layer import Embedding_layer
-from model.Utils import softmax
+from model.utils import Layer
+from model.embedding_layer import Embedding_layer
+from model.utils import softmax
 from collections import OrderedDict
 from collections import deque
 from typing import Union, Callable

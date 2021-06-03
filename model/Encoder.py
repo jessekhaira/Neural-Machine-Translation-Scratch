@@ -1,4 +1,4 @@
-from model.Embedding_layer import Embedding_layer
+from model.embedding_layer import Embedding_layer
 from model.recurrent_neural_network import RecurrentNeuralNetwork
 
 
@@ -33,7 +33,7 @@ class Encoder(object):
         _, _, encoded_matrix = self.rnn_cell._forward(x, mask=mask)
         return encoded_matrix
 
-    def _backward(self, dA_encodedVector, learn_rate):
+    def _backward(self, da_encoded_vector, learn_rate):
         # Shape: (M, dim_embed_src)
-        self.rnn_cell._backward(gradient_ahead=dA_encodedVector,
+        self.rnn_cell._backward(gradient_ahead=da_encoded_vector,
                                 learn_rate=learn_rate)

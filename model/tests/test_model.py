@@ -1,9 +1,12 @@
+""" This module contains unit tests for the sequence to sequence
+network on a toy dataset to ensure everything is wired up
+appropriately """
 import unittest
-from model.sequence_to_sequence_network import SequenceToSequenceRecurrentNetwork
 import numpy as np
-from model.Utils import getMask
+from model.sequence_to_sequence_network import SequenceToSequenceRecurrentNetwork
+from model.utils import getMask
+from model.utils import smoothLoss
 import matplotlib.pyplot as plt
-from model.Utils import smoothLoss
 
 objLoss = smoothLoss()
 
@@ -62,7 +65,7 @@ class TestSeq2SeqRNN(unittest.TestCase):
             print(output)
             print(test_epoch)
             if test_epoch % 1000 == 0:
-                show_param_norms(obj2.Encoder, obj2.Decoder, test_epoch)
+                show_param_norms(obj2.encoder, obj2.decoder, test_epoch)
 
 
 def show_param_norms(enc, dec, e):
