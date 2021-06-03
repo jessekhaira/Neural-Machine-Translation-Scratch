@@ -12,10 +12,15 @@ objLoss = smoothLoss()
 
 
 class TestSeq2SeqRNN(unittest.TestCase):
-    # This test ensures sure that the forward pass and backward pass are all wired up correctly
-    # for both the encoder and decoder, along with testing out beam search.
-    # Achieving ~0 loss should be trivial if the algorithm is coded up currently, and it is!
+    """ This class contains unit tests for the sequence to sequence network
+    on a toy dataset """
+
     def testOverallAndSoftmax(self):
+        """ This test ensures sure that the forward pass and backward pass
+        are all wired up correctly for both the encoder and decoder, along
+        with testing out beam search.Achieving ~0 loss should be trivial if
+        the algorithm is coded up currently.
+        """
         source_data = np.array([[0, 3, 5, 6, 4, 3, 2, 1],
                                 [0, 4, 5, 6, 7, 8, 9, 2],
                                 [0, 3, 1, 1, 5, 6, 8, 2]])
