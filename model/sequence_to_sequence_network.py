@@ -257,8 +257,8 @@ class SequenceToSequenceRecurrentNetwork(object):
             learn_rate = learn_rate if not learning_schedule else learning_schedule(
                 learn_rate, epoch)
             if learning_schedule:
-                print('old learn rate: %s, new learn rate: %s' %
-                      (saved_lr, learn_rate))
+                print(
+                    f"old learn rate: {saved_lr}, new learn rate: {learn_rate}")
 
             # get loss w/ teacher forcing when validating
             if valid_loader:
@@ -279,8 +279,8 @@ class SequenceToSequenceRecurrentNetwork(object):
                         predicted = self.predict(srcV[0:1])
                         print(predicted)
                         print(
-                            'Batch %s, input_sentence: %s translated sentence: %s'
-                            % (i, input_sentence, predicted))
+                            f"Batch {i}, input_sentence: {input_sentence} translated sentence: {predicted}"
+                        )
 
                     loss = self._forward(srcV, trgV, mask_srcV, mask_trgV)
                     batch_losses.append(loss)
@@ -289,11 +289,11 @@ class SequenceToSequenceRecurrentNetwork(object):
                     smooth_loss_valid(np.mean(batch_losses)))
 
             if verbose and valid_loader:
-                print('Epoch num: %s, Train Loss: %s, Validation Loss: %s' %
-                      (epoch, training_losses[-1], validation_losses[-1]))
+                print(
+                    f"Epoch num: {epoch}, Train Loss: {training_losses[-1]}, " +
+                    f"Validation Loss: {validation_losses[-1]}")
             if verbose:
-                print('Epoch num: %s, Train Loss: %s' %
-                      (epoch, training_losses[-1]))
+                print(f"Epoch num: {epoch}, Train Loss: {training_losses[-1]}")
 
         return training_losses, validation_losses
 
