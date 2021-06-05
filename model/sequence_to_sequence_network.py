@@ -182,12 +182,12 @@ class SequenceToSequenceRecurrentNetwork(object):
                 Iterator for the data used to validate the model in batches
 
             src_name:
-                String used to access the batch of examples of shape (batch_size,
-                seq_len) of source language
+                String used to access the batch of examples of shape (batch_size
+                , seq_len) of source language
 
             trg_name:
-                String used to access the batch of examples of shape (batch_size,
-                seq_len) of the target language
+                String used to access the batch of examples of shape (batch_size
+                , seq_len) of the target language
 
             padding_idx:
                 Integer representing the index used for masking
