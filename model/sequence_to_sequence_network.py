@@ -8,7 +8,7 @@ from model.utils import smoothLoss
 import torch
 import numpy as np
 from tqdm import tqdm
-from typing import Union, Dict, Tuple
+from typing import Union, Dict, Tuple, Iterator, Callable, Literal, List
 
 
 class SequenceToSequenceRecurrentNetwork(object):
@@ -140,18 +140,21 @@ class SequenceToSequenceRecurrentNetwork(object):
         da_encoded_vector = self.decoder._backward(learn_rate)
         self.encoder._backward(da_encoded_vector, learn_rate)
 
-    def train(self,
-              data_loader,
-              batch_size,
-              src_name,
-              trg_name,
-              padding_idx,
-              valid_loader=None,
-              learn_rate=0.1,
-              learning_schedule=None,
-              num_epochs=100,
-              verbose=1,
-              _testing=None):
+    def train(
+            self,
+            data_loader: Iterator,
+            batch_size: int,
+            src_name: str,
+            trg_name: str,
+            padding_idx: int,
+            valid_loader: Iterator = None,
+            learn_rate: float = 0.1,
+            learning_schedule: Union[Callable[[float, int], float],
+                                     None] = None,
+            num_epochs: int = 100,
+            verbose: Literal[0, 1] = 1,
+            _testing: Union[int,
+                            None] = None) -> Tuple[List[float], List[float]]:
         """ This method is used to train the seq2seq rnn model in batches.
         This method expects the data to come in as an iterator, and the batches
         to come in as an object like TorchText's bucket iterator produces. Each
@@ -179,11 +182,11 @@ class SequenceToSequenceRecurrentNetwork(object):
                 Iterator for the data used to validate the model in batches
 
             src_name:
-                Used to access the batch of examples of shape (batch_size,
+                String used to access the batch of examples of shape (batch_size,
                 seq_len) of source language
 
             trg_name:
-                Used to access the batch of examples of shape (batch_size,
+                String used to access the batch of examples of shape (batch_size,
                 seq_len) of the target language
 
             padding_idx:
@@ -202,6 +205,10 @@ class SequenceToSequenceRecurrentNetwork(object):
             num_epochs:
                 Integer representing the number of epochs to train the model for
 
+            verbose:
+                Integer that should be either 0 or 1 representing whether or not
+                to log statements while the algorithm trains
+
             _testing:
                 During testing, parameter used to ensure model can do well on a
                 small number of examples. So if one epoch has say 56 batches,
@@ -215,8 +222,8 @@ class SequenceToSequenceRecurrentNetwork(object):
         """
         training_losses = []
         validation_losses = []
-        smoothLossTrain = smoothLoss(0.1)
-        smoothLossValid = smoothLoss(0.1)
+        smooth_loss_train = smoothLoss(0.1)
+        smooth_loss_valid = smoothLoss(0.1)
         for epoch in tqdm(range(num_epochs)):
             epoch_loss = []
             for i, batch in enumerate(data_loader):
@@ -244,7 +251,7 @@ class SequenceToSequenceRecurrentNetwork(object):
                 epoch_loss.append(loss)
 
             # smoothen the loss out when training
-            training_losses.append(smoothLossTrain(np.mean(epoch_loss)))
+            training_losses.append(smooth_loss_train(np.mean(epoch_loss)))
             # Update learn rate after every epoch
             saved_lr = learn_rate
             learn_rate = learn_rate if not learning_schedule else learning_schedule(
@@ -278,7 +285,8 @@ class SequenceToSequenceRecurrentNetwork(object):
                     loss = self._forward(srcV, trgV, mask_srcV, mask_trgV)
                     batch_losses.append(loss)
 
-                validation_losses.append(smoothLossValid(np.mean(batch_losses)))
+                validation_losses.append(
+                    smooth_loss_valid(np.mean(batch_losses)))
 
             if verbose and valid_loader:
                 print('Epoch num: %s, Train Loss: %s, Validation Loss: %s' %
