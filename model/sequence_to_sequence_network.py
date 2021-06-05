@@ -207,6 +207,11 @@ class SequenceToSequenceRecurrentNetwork(object):
                 small number of examples. So if one epoch has say 56 batches,
                 instead of going through all 56 batches, we only go through
                 testing batches in a single epoch.
+
+        Returns:
+            List of floating point values representing the training loss, and
+            a list of floating point values representing the validation loss
+            respectively.
         """
         training_losses = []
         validation_losses = []
