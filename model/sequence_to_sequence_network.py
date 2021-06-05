@@ -267,22 +267,23 @@ class SequenceToSequenceRecurrentNetwork(object):
                 for i, batch in enumerate(valid_loader):
                     if i == _testing:
                         break
-                    srcV = getattr(batch, src_name)
-                    trgV = getattr(batch, trg_name)
-                    srcV, trgV = self._preprocessBatch(srcV, trgV, batch_size)
-                    mask_srcV = getMask(srcV, padding_idx)
-                    mask_trgV = getMask(trgV, padding_idx)
+                    src_v = getattr(batch, src_name)
+                    trg_v = getattr(batch, trg_name)
+                    src_v, trg_v = self._preprocessBatch(
+                        src_v, trg_v, batch_size)
+                    mask_src_v = getMask(src_v, padding_idx)
+                    mask_trg_v = getMask(trg_v, padding_idx)
 
                     if i % 100 == 0 and verbose:
                         input_sentence = " ".join(
-                            list(map(lambda x: self.src_map_i2c[x], srcV[0])))
-                        predicted = self.predict(srcV[0:1])
+                            list(map(lambda x: self.src_map_i2c[x], src_v[0])))
+                        predicted = self.predict(src_v[0:1])
                         print(predicted)
                         print(
                             f"Batch {i}, input_sentence: {input_sentence} translated sentence: {predicted}"
                         )
 
-                    loss = self._forward(srcV, trgV, mask_srcV, mask_trgV)
+                    loss = self._forward(src_v, trg_v, mask_src_v, mask_trg_v)
                     batch_losses.append(loss)
 
                 validation_losses.append(
