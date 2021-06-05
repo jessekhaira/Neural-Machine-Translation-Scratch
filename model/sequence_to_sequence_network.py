@@ -135,8 +135,8 @@ class SequenceToSequenceRecurrentNetwork(object):
     def _backward(self, learn_rate: float):
         """ This method computes the backward pass through the network.
         """
-        # vector containing the gradient dL/dA for the encoded vector produced at last time
-        # step for encoder
+        # vector containing the gradient dL/dA for the encoded vector
+        # produced at last time step for encoder
         da_encoded_vector = self.decoder._backward(learn_rate)
         self.encoder._backward(da_encoded_vector, learn_rate)
 
@@ -168,21 +168,45 @@ class SequenceToSequenceRecurrentNetwork(object):
         Same idea for the valid_loader.
 
         Args:
-            -> data_loader (Iterator): Iterator for the data used to train the model in batches
-            -> batch_size (int): Size of the batches used within an epoch 
-            -> valid_loader (Iterator): Iterator for the data used to validate the model in batches 
-            -> src_name (Property Accessor): Used to access the batch of examples of shape (batch_size, seq_len)
-            of source language
-            -> trg_name (Property Accessor): Used to access the batch of examples of shape (batch_size, seq_len)
-            of the target language
-            -> padding_idx (int): Represents idx used for masking 
-            -> learn_rate (int): Integer representing learning rate used to update parameters
-            -> learning_schedule (Function | None): Schedule used to update the learning rate throughout training. If provided,
-            function must take as input learn rate and the current epoch the net is on. 
-            -> num_epochs (int): Number of epochs to train the model for
-            -> _testing (int | None): During testing, parameter used to ensure model can do well on a small number of 
-            examples. So if one epoch has say 56 batches, instead of going through all 56 batches, we only go through testing
-            batches in a single epoch. 
+            data_loader:
+                Iterator that will loop over the training data
+
+            batch_size:
+                Integer representing the size of the batches used within
+                an epoch
+
+            valid_loader:
+                Iterator for the data used to validate the model in batches
+
+            src_name:
+                Used to access the batch of examples of shape (batch_size,
+                seq_len) of source language
+
+            trg_name:
+                Used to access the batch of examples of shape (batch_size,
+                seq_len) of the target language
+
+            padding_idx:
+                Integer representing the index used for masking
+
+            learn_rate:
+                Floating point value that represents the learning rate used to
+                update parameters with gradient descent
+
+            learning_schedule:
+                Function representing the learning rate schedule used to update
+                the learning rate throughout training, or None if not wanted.
+                If provided, the function must take an input learn rate and the
+                current epoch the net is on.
+
+            num_epochs:
+                Integer representing the number of epochs to train the model for
+
+            _testing:
+                During testing, parameter used to ensure model can do well on a
+                small number of examples. So if one epoch has say 56 batches,
+                instead of going through all 56 batches, we only go through
+                testing batches in a single epoch.
         """
         training_losses = []
         validation_losses = []
@@ -196,7 +220,8 @@ class SequenceToSequenceRecurrentNetwork(object):
 
                 # Shape (M,T_src)
                 if verbose:
-                    print('Entering epoch: %s, batch number %s!' % (epoch, i))
+                    print(f"Entering epoch: {epoch}, batch number {i}!" %
+                          (epoch, i))
                 src_train = getattr(batch, src_name)
                 # Shape (M,T_trg)
                 trg_train = getattr(batch, trg_name)
