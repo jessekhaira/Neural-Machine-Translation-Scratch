@@ -153,8 +153,8 @@ class SequenceToSequenceRecurrentNetwork(object):
                                      None] = None,
             num_epochs: int = 100,
             verbose: Literal[0, 1] = 1,
-            _testing: Union[int,
-                            None] = None) -> Tuple[List[float], List[float]]:
+            testing: Union[int,
+                           None] = None) -> Tuple[List[float], List[float]]:
         """ This method is used to train the seq2seq rnn model in batches.
         This method expects the data to come in as an iterator, and the batches
         to come in as an object like TorchText's bucket iterator produces. Each
@@ -209,7 +209,7 @@ class SequenceToSequenceRecurrentNetwork(object):
                 Integer that should be either 0 or 1 representing whether or not
                 to log statements while the algorithm trains
 
-            _testing:
+            testing:
                 During testing, parameter used to ensure model can do well on a
                 small number of examples. So if one epoch has say 56 batches,
                 instead of going through all 56 batches, we only go through
@@ -227,7 +227,7 @@ class SequenceToSequenceRecurrentNetwork(object):
         for epoch in tqdm(range(num_epochs)):
             epoch_loss = []
             for i, batch in enumerate(data_loader):
-                if i == _testing:
+                if i == testing:
                     break
 
                 # Shape (M,T_src)
@@ -265,7 +265,7 @@ class SequenceToSequenceRecurrentNetwork(object):
                 batch_losses = []
 
                 for i, batch in enumerate(valid_loader):
-                    if i == _testing:
+                    if i == testing:
                         break
                     src_v = getattr(batch, src_name)
                     trg_v = getattr(batch, trg_name)
