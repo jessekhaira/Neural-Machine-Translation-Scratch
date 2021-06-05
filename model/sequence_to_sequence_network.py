@@ -279,9 +279,8 @@ class SequenceToSequenceRecurrentNetwork(object):
                             list(map(lambda x: self.src_map_i2c[x], src_v[0])))
                         predicted = self.predict(src_v[0:1])
                         print(predicted)
-                        print(
-                            f"Batch {i}, input_sentence: {input_sentence} translated sentence: {predicted}"
-                        )
+                        print(f"Batch {i}, input_sentence: {input_sentence} " +
+                              f"translated sentence: {predicted}")
 
                     loss = self._forward(src_v, trg_v, mask_src_v, mask_trg_v)
                     batch_losses.append(loss)
