@@ -254,8 +254,8 @@ class SequenceToSequenceRecurrentNetwork(object):
             training_losses.append(smooth_loss_train(np.mean(epoch_loss)))
             # Update learn rate after every epoch
             saved_lr = learn_rate
-            learn_rate = learn_rate if not learning_schedule else learning_schedule(
-                learn_rate, epoch)
+            learn_rate = (learn_rate if not learning_schedule else
+                          learning_schedule(learn_rate, epoch))
             if learning_schedule:
                 print(
                     f"old learn rate: {saved_lr}, new learn rate: {learn_rate}")
