@@ -239,7 +239,7 @@ class SequenceToSequenceRecurrentNetwork(object):
                 trg_train = getattr(batch, trg_name)
 
                 # make sure we have np arrays and shapes of arrays are (M,T)
-                src_train, trg_train = self._preprocessBatch(
+                src_train, trg_train = self._preprocess_batch(
                     src_train, trg_train, batch_size)
 
                 # Shape (batch_size, seq_len)
@@ -269,7 +269,7 @@ class SequenceToSequenceRecurrentNetwork(object):
                         break
                     src_v = getattr(batch, src_name)
                     trg_v = getattr(batch, trg_name)
-                    src_v, trg_v = self._preprocessBatch(
+                    src_v, trg_v = self._preprocess_batch(
                         src_v, trg_v, batch_size)
                     mask_src_v = getMask(src_v, padding_idx)
                     mask_trg_v = getMask(trg_v, padding_idx)
@@ -297,7 +297,7 @@ class SequenceToSequenceRecurrentNetwork(object):
 
         return training_losses, validation_losses
 
-    def _preprocessBatch(self, x1, x2, batch_size):
+    def _preprocess_batch(self, x1, x2, batch_size):
         if type(x1) == torch.Tensor:
             x1 = x1.numpy()
             x2 = x2.numpy()
