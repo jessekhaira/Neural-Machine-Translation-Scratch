@@ -307,33 +307,44 @@ class SequenceToSequenceRecurrentNetwork(object):
         return x1, x2
 
     def predict(self,
-                inp_seq,
-                length_normalization=0.75,
-                beam_width=3,
-                max_seq_len=20):
+                inp_seq: np.ndarray,
+                length_normalization: float = 0.75,
+                beam_width: int = 3,
+                max_seq_len: int = 20) -> str:
+        """ This method carries out translation from a source language to
+        a target language when given a vector of integers in the source language
+        (that should belong to the same vocabulary as the network was trained
+        on).
+
+        This method utilizes the (greedy) beam search algorithm to determine the
+        highest probability sentence that can be output from the architecture.
+
+        Candidate solutions have their probabilities normalized by their length
+        to solve the problem of outputting overly short sentences as described:
+        in: https://arxiv.org/pdf/1609.08144.pdf.
+
+        Args:
+            inp_seq:
+                Numpy array of shape (1, t) where t indicates time steps
+
+            beam_width:
+                Integer representing the size of the beam to use during the
+                search
+
+            length_normalization:
+                Integer indicating the factor by which to normalize the
+                probabilities of the candidate solutions by their length
+
+            max_seq_len:
+                Integer representing the maximum number of time steps the
+                decoder will unfold when generating a sentence
+
+        Returns:
+            String containing the decoded vector by the network
         """
-        This method carries out translation from a source language to a target language
-        when given a vector of integers in the source language (that should belong to the same vocabulary
-        as the network was trained on). 
-
-        This method utilizes the (greedy) beam search algorithm to determine the highest probability
-        sentence that can be output from the architecture. 
-
-        Candidate solutions have their probabilities normalized by their length to solve the problem 
-        of outputting overly short sentences as described in: https://arxiv.org/pdf/1609.08144.pdf. 
-
-        Inputs:
-            -> inp_seq (NumPy vector): Vector of shape (1, t) where t indicates time steps. 
-            -> beam_width (int): Integer representing the size of the beam to use during the search
-            -> length_normalization (int): Integer indicating the factor by which to normalize the probabilities
-            of the candidate solutions by their length
-            -> max_seq_len (int): Integer representing the maximum number of time steps the decoder will unfold 
-            when generating a sentence 
-        Outputs:
-            -> String containing the decoded vector by the network 
-        """
-        assert inp_seq.max(
-        ) < self.src_dim, "The sequence has to belong to the same vocabulary as the model was trained on!"
+        assert inp_seq.max() < self.src_dim, (
+            "The sequence has to belong to the same vocabulary as the model was trained on!"
+        )
         encoded = self.encoder(inp_seq, None)
         output_ints = self.decoder.beamSearch(encoded, self.eos_int,
                                               self.sos_int,
