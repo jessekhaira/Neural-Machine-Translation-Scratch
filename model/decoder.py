@@ -4,6 +4,7 @@ architecture"""
 from model.embedding_layer import Embedding_layer
 from model.recurrent_neural_network import RecurrentNeuralNetwork
 from model.utils import crossEntropy
+import numpy as np
 
 
 class Decoder(object):
@@ -43,31 +44,46 @@ class Decoder(object):
                                                predict=True,
                                                costFunction=crossEntropy)
 
-    def __call__(self, encoded_batch, target_language_seqs, mask):
-        """
-        Carries out the forward pass for the Decoder. 
+    def __call__(self, encoded_batch: np.ndarray,
+                 target_language_seqs: np.ndarray, mask: np.ndarray):
+        """ Instantiating an object of this class and calling it will carry
+        out the forward pass for the Decoder.
 
-        The Decoder is fed in an encoded tensor from the decoder, which becomes the 
-        prev activations for the unit. 
+        The Decoder is fed in an encoded tensor from the decoder, which becomes
+        the prev activations for the unit.
 
-        In contrast to the encoder, in which you just slice out all the vectors occurring
-        at a given time step and feed them in and process them in parallel with no labels,
-        the Decoder has both x<t> and y<t>. The x<t> is the label at the previous time step,
-        and the y<t> is the label for the next time step. Regardless of what we predict at a given time
-        step, we feed the correct label in at the next time step.
+        In contrast to the encoder, in which you just slice out all the vectors
+        occurring at a given time step and feed them in and process them in
+        parallel with no labels, the Decoder has both x<t> and y<t>. The x<t>
+        is the label at the previous time step, and the y<t> is the label for
+        the next time step. Regardless of what we predict at a given time step,
+        we feed the correct label in at the next time step.
 
-        If your calling the Decoder directly, this assumes it is being used for training. If predictions are
-        wanted, use the _beamSearch method instead, which carries out prediction with the decoder when
-        given an encoded sentence. 
+        If your calling the Decoder directly, this assumes it is being used for
+        training. If predictions are wanted, use the _beamSearch method instead,
+        which carries out prediction with the decoder when given an encoded
+        sentence.
 
-        Inputs:
-            -> encoded_batch (NumPy Matrix): Matrix of shape (M, num_neurons) where M is the number of examples,
-            num_neurons is the number of neurons in the encoder
-            -> target_language_seqs (NumPy Matrix): Matrix of shape (M, T) 
-            -> mask (NumPy Matrix): Matrix of shape (M,T) indicating the vectors that are padding vectors
-        Outputs:
-            -> integer representing the loss on this batch
-        
+        M - number of examples
+        T - number of timesteps
+        num_neurons - number of neurons in the encoder
+
+        Args:
+            encoded_batch:
+                Numpy array of shape (M, num_neurons) representing the output
+                from the encoder algorithm
+
+            target_language_seqs:
+                Numpy array of shape (M, T) representing the inputs and outputs
+                meant to be fed into the decoder algorithm
+
+            mask:
+                Numpy array of shape (M,T) indicating the vectors that are
+                padding vectors and do not contribute to the loss or gradients
+                that are backpropagated
+
+        Returns:
+            Floating point value representing the training loss on this batch
         """
         # Shape (M, T-1)
         x_matrix = target_language_seqs[:, :-1]
