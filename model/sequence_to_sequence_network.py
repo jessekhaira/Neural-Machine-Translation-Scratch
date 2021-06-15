@@ -297,8 +297,9 @@ class SequenceToSequenceRecurrentNetwork(object):
 
         return training_losses, validation_losses
 
-    def _preprocess_batch(self, x1, x2, batch_size):
-        if type(x1) == torch.Tensor:
+    def _preprocess_batch(self, x1: np.ndarray, x2: np.ndarray,
+                          batch_size: int) -> Tuple[np.ndarray, np.ndarray]:
+        if isinstance(x1, torch.Tensor):
             x1 = x1.numpy()
             x2 = x2.numpy()
         if x1.shape[0] != batch_size:
@@ -327,13 +328,13 @@ class SequenceToSequenceRecurrentNetwork(object):
             inp_seq:
                 Numpy array of shape (1, t) where t indicates time steps
 
-            beam_width:
-                Integer representing the size of the beam to use during the
-                search
-
             length_normalization:
                 Integer indicating the factor by which to normalize the
                 probabilities of the candidate solutions by their length
+
+            beam_width:
+                Integer representing the size of the beam to use during the
+                search
 
             max_seq_len:
                 Integer representing the maximum number of time steps the
