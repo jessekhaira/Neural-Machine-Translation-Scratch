@@ -45,7 +45,7 @@ class Decoder(object):
                                                costFunction=crossEntropy)
 
     def __call__(self, encoded_batch: np.ndarray,
-                 target_language_seqs: np.ndarray, mask: np.ndarray):
+                 target_language_seqs: np.ndarray, mask: np.ndarray) -> float:
         """ Instantiating an object of this class and calling it will carry
         out the forward pass for the Decoder.
 
