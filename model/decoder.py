@@ -31,9 +31,11 @@ class Decoder(object):
                  num_neurons_decoder: int, optim: object):
         self.embedding_layer = Embedding_layer(vocab_size_trg, dim_embed_trg,
                                                optim)
-        # for the decoder, we're going to tie the weights of the embedding layer and the linear projection
-        # before softmax activation. If vocab_size_src and vocab_size_trg are same as well, its possible to tie all
-        # the weights but not done here for simplicity of implementation . See: https://arxiv.org/abs/1608.05859
+        # for the decoder, we're going to tie the weights of the embedding
+        # layer and the linear projection before softmax activation. If
+        # vocab_size_src and vocab_size_trg are same as well, its possible to
+        # tie all the weights but not done here for simplicity of
+        # implementation. See: https://arxiv.org/abs/1608.05859
         self.rnn_cell = RecurrentNeuralNetwork(dim_embed_trg,
                                                num_neurons_decoder,
                                                optim,
