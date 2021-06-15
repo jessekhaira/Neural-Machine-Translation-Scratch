@@ -1,23 +1,33 @@
+""" This module contains code for a class that represents the encoder
+algorithm meant to be used within a sequence to sequence network for
+machine translation """
 from model.embedding_layer import Embedding_layer
 from model.recurrent_neural_network import RecurrentNeuralNetwork
 
 
 class Encoder(object):
-    """
-    This class represents the Encoder object used within a sequence to sequence
-    recurrent neural network. The job of this architecture is to take in an input
-    sequence in a source language, and produce an embedded vector to feed into a 
-    decoder network. 
+    """ This class represents the Encoder object used within a sequence to
+    sequence recurrent neural network. The job of this architecture is to
+    take in an input sequence in a source language, and produce an embedded
+    vector to feed into a decoder network.
 
-    Inputs:
-        -> vocab_size_src (int): Size of the source language vocabulary
-        -> dim_embed_src (int): Size of the embeddings for the encoder 
-        -> num_neurons_encoder (int): Number of neurons in the encoder
-        -> optim(class): Optimizer used to train the parameters within the model
+    Attributes:
+        vocab_size_src:
+            Integer representing the size of the source language vocabulary
+
+        dim_embed_src:
+            Integer representing the size of the embeddings for the encoder
+
+        num_neurons_encoder:
+            Integer representing the number of neurons in the encoder
+
+        optim:
+            Object representing the optimization algorithm to use to learn the
+            parameters for the algorithm
     """
 
-    def __init__(self, vocab_size_src, dim_embed_src, num_neurons_encoder,
-                 optim):
+    def __init__(self, vocab_size_src: int, dim_embed_src: int,
+                 num_neurons_encoder: int, optim: object):
         self.embedding_layer = Embedding_layer(dim_in=vocab_size_src,
                                                embed_dim=dim_embed_src,
                                                optim=optim)
