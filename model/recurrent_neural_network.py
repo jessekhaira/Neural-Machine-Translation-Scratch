@@ -67,9 +67,9 @@ class RecurrentNeuralNetwork(Layer):
     def _initWeights(self, dim_in, num_neurons):
         # rnn cell weights - produces activations of shape (M, num_neurons)
         ba = np.zeros((1, num_neurons))
-        Wax = np.random.randn(dim_in, num_neurons) * 0.01
-        Waa = np.random.randn(num_neurons, num_neurons) * 0.01
-        return Waa, Wax, ba
+        wax = np.random.randn(dim_in, num_neurons) * 0.01
+        waa = np.random.randn(num_neurons, num_neurons) * 0.01
+        return waa, wax, ba
 
     def _forward(self, x, y=None, a_prev=None, mask=None):
         """ This method carries out the forward pass through an RNN.
