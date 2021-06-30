@@ -1,7 +1,7 @@
 """ This module contains code for a class that represents the encoder
 algorithm meant to be used within a sequence to sequence network for
 machine translation """
-from model.embedding_layer import Embedding_layer
+from model.embedding_layer import EmbeddingLayer
 from model.recurrent_neural_network import RecurrentNeuralNetwork
 
 
@@ -28,9 +28,9 @@ class Encoder(object):
 
     def __init__(self, vocab_size_src: int, dim_embed_src: int,
                  num_neurons_encoder: int, optim: object):
-        self.embedding_layer = Embedding_layer(dim_in=vocab_size_src,
-                                               embed_dim=dim_embed_src,
-                                               optim=optim)
+        self.embedding_layer = EmbeddingLayer(dim_in=vocab_size_src,
+                                              embed_dim=dim_embed_src,
+                                              optim=optim)
         self.rnn_cell = RecurrentNeuralNetwork(
             dim_in=dim_embed_src,
             num_neurons=num_neurons_encoder,

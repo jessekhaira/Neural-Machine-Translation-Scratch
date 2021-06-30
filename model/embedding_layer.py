@@ -2,7 +2,7 @@ from model.utils import Layer
 import numpy as np
 
 
-class Embedding_layer(Layer):
+class EmbeddingLayer(Layer):
     """
     This class represents an embedding layer. The purpose of the layer is to transport
     vectors from a vector space V to a vector space W through a linear transformation 

@@ -1,7 +1,7 @@
 """ This module contains code for a class representing a decoder
 neural network, meant to be used inside a sequence to sequence
 architecture"""
-from model.embedding_layer import Embedding_layer
+from model.embedding_layer import EmbeddingLayer
 from model.recurrent_neural_network import RecurrentNeuralNetwork
 from model.utils import crossEntropy
 import numpy as np
@@ -30,8 +30,8 @@ class Decoder(object):
 
     def __init__(self, vocab_size_trg: int, dim_embed_trg: int,
                  num_neurons_decoder: int, optim: object):
-        self.embedding_layer = Embedding_layer(vocab_size_trg, dim_embed_trg,
-                                               optim)
+        self.embedding_layer = EmbeddingLayer(vocab_size_trg, dim_embed_trg,
+                                              optim)
         # for the decoder, we're going to tie the weights of the embedding
         # layer and the linear projection before softmax activation. If
         # vocab_size_src and vocab_size_trg are same as well, its possible to

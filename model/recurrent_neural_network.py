@@ -1,7 +1,7 @@
 """ This module contains code for a class that represents a vanilla
 recurrent neural network """
 from model.utils import Layer
-from model.embedding_layer import Embedding_layer
+from model.embedding_layer import EmbeddingLayer
 from model.utils import softmax
 from collections import OrderedDict
 from collections import deque
@@ -48,7 +48,7 @@ class RecurrentNeuralNetwork(Layer):
                  dim_in: int,
                  num_neurons: int,
                  optim: object,
-                 embedding_layer: Embedding_layer,
+                 embedding_layer: EmbeddingLayer,
                  predict: bool = False,
                  costFunction: Union[Callable[[np.ndarray, np.ndarray], float],
                                      None] = None):
