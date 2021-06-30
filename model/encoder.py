@@ -38,8 +38,9 @@ class Encoder(object):
             embedding_layer=self.embedding_layer)
 
     def __call__(self, x, mask):
-        # Shape: (M, num_neurons_encoder) containing activations that hopefully encode
-        # all the words in every sequence in the source language well
+        # Shape: (M, num_neurons_encoder) containing activations that
+        # hopefully encode all the words in every sequence in the source
+        # language well
         _, _, encoded_matrix = self.rnn_cell._forward(x, mask=mask)
         return encoded_matrix
 
