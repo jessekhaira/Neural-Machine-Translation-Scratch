@@ -57,7 +57,8 @@ class RecurrentNeuralNetwork(Layer):
         self.predict = predict
         if self.predict:
             self.bay = np.zeros((1, self.embedding_layer.W.shape[0]))
-        # Ordered dict needed to cache values at every time step for backprop in the order the timesteps occur
+        # Ordered dict needed to cache values at every time step for backprop in
+        # the order the timesteps occur
         self.time_cache = OrderedDict()
         self.predict = predict
         self.costFunction = costFunction
@@ -71,47 +72,61 @@ class RecurrentNeuralNetwork(Layer):
         return Waa, Wax, ba
 
     def _forward(self, x, y=None, a_prev=None, mask=None):
-        """
-        This method carries out the forward pass through an RNN.
+        """ This method carries out the forward pass through an RNN.
 
-        Our padding idxs should not contribute to our loss, to our weight updates, and they shouldn't affect
-        the activations flowing from the previous layer to the next layer. To that end, in the forward step,
-        we multiply the loss vector of shape (M,) containing the losses for all the inputs at timestep T by the
-        mask and zero out losses that belong to padding vectors, and divide by a batch size that ignores the 
-        padding idxs. 
+        Our padding idxs should not contribute to our loss, to our weight
+        updates, and they shouldn't affect the activations flowing from the
+        previous layer to the next layer. To that end, in the forward step,
+        we multiply the loss vector of shape (M,) containing the losses for
+        all the inputs at timestep T by the mask and zero out losses that belong
+        to padding vectors, and divide by a batch size that ignores the padding
+        idxs.
 
-        We also replace the activations for vectors identified to be padding vectors by the activations obtained
-        in the previous timestep. 
+        We also replace the activations for vectors identified to be padding
+        vectors by the activations obtained in the previous timestep.
 
 
         M: number of examples
-        T: number of timesteps 
-        Inputs:
-            -> x (NumPy Matrix): Matrix of integers of shape (M,T)
-            -> y (NumPy Matrix | None): Matrix of integers of shape (M,T) containing the labels for each example
-            in x or None
-            -> a_prev (NumPy Matrix | None): Matrix of activations from the previous timestep 
-            -> mask (NumPy Matrix | None): Matrix of integers of shape (M,T) indicating which indices belong to padding
-            vectors or None.
+        T: number of timesteps
 
-            So mask[0] corresponds to a sequence of integers for the first example, and if a value is False
-            within this row, that means the vector this idx corresponds to is a padding vector. 
+        Args:
+            x:
+                Numpy array of shape (M,T) representing the text sequences to
+                train on
 
-            During training, we will be going sequentially from t = 0 to t = T, for which we will slice out from y and
-            the mask an array of shape (M,) of the labels for the current step (if predicting) and whether each vector 
-            in the current sequence is a padding vector or not. 
-        
-        Outputs:
-            -> Integer representing the loss, or an encoded tensor. Depends on whether rnn cell is used to predict or
-            used to encode. 
+            y:
+                Numpy array of integers of shape (M,T) containing the labels
+                for each example in x or None
+
+            a_prev:
+                Numpy array of activations from the previous timestep, or None
+
+            mask:
+                Numpy array of integers of shape (M,T) indicating which indices
+                belong to padding vectors or None.
+
+                So mask[0] corresponds to a sequence of integers for the first
+                example, and if a value is False within this row, that means the
+                vector this idx corresponds to is a padding vector.
+
+                During training, we will be going sequentially from t = 0 to
+                t = T, for which we will slice out from y and the mask an array
+                of shape (M,) of the labels for the current step (if predicting)
+                and whether each vector in the current sequence is a padding
+                vector or not.
+
+        Returns:
+            A numpy matrix representing the activations from this layer, or a
+            floating point value representing the loss, depending on whether
+            rnn cell is used to predict or used to encode.
         """
         # shape (M, num_neurons)
         a_prev = a_prev if a_prev is not None else np.zeros(
             (x.shape[0], self.Waa.shape[0]))
         loss = 0
         for t in range(x.shape[1]):
-            # get the sequence of vectors that occur specifically at this time step, then process them
-            # all at one time
+            # get the sequence of vectors that occur specifically at this
+            # time step, then process them all at one time
             pre_embedded_inp_t = x[:, t]
             # Shape (M, dim_in)
             curr_timestep_x = self.embedding_layer._forward(pre_embedded_inp_t)
@@ -138,11 +153,12 @@ class RecurrentNeuralNetwork(Layer):
                                                mask=curr_mask)
                     loss += loss_t
 
-            # Mask: If we fed in a padding vector at this time step, we want to replace that dummy activation
-            # value with the activation from the previous timestep.
+            # Mask: If we fed in a padding vector at this time step, we want
+            # to replace that dummy activation value with the activation from
+            # the previous timestep.
 
-            # In our get_mask function, we have vector != padding_idx, so if a value is False, that means
-            # its a padding vector
+            # In our get_mask function, we have vector != padding_idx, so if a
+            # value is False, that means its a padding vector
             if curr_mask is not None:
                 activation_timestep[curr_mask == False, :] = a_prev[curr_mask ==
                                                                     False, :]
