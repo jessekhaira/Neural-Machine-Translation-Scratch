@@ -180,11 +180,11 @@ class RecurrentNeuralNetwork(Layer):
 
     def _backward(self, learn_rate, gradient_ahead=None):
         if self.predict:
-            return self._backwardPredict(learn_rate)
+            return self._backward_predict(learn_rate)
         else:
             self._backwardNoPredict(learn_rate, gradient_ahead)
 
-    def _backwardPredict(self, learn_rate):
+    def _backward_predict(self, learn_rate):
         """
         This method carries out the backward pass for a batched RNN cell that is predicting at every time step.
         As the RNN cell is unrolled for T timesteps in a batch, the gradients for the traininable parameters
