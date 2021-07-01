@@ -17,10 +17,10 @@ class EmbeddingLayer(Layer):
     def __init__(self, dim_in, embed_dim, optim):
         self.dim_in = dim_in
         self.embed_dim = embed_dim
-        self.W = self._initWeights()
+        self.W = self._init_weights()
         self.optim = optim()
 
-    def _initWeights(self):
+    def _init_weights(self):
         return np.random.randn(self.dim_in, self.embed_dim) * 0.01
 
     def forward(self, x):

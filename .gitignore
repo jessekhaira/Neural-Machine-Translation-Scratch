@@ -1,7 +1,6 @@
 .vscode/
 .DS_Store
 .ipynb_checkpoints
-
 *venv*
 *.egg-info
 train.csv

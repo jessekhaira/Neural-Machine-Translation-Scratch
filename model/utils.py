@@ -8,7 +8,7 @@ class Layer(ABC):
     """
 
     @abstractmethod
-    def _initWeights(self):
+    def _init_weights(self):
         pass
 
     @abstractmethod
