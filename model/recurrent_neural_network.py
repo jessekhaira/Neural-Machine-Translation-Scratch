@@ -53,7 +53,7 @@ class RecurrentNeuralNetwork(Layer):
                  costFunction: Union[Callable[[np.ndarray, np.ndarray], float],
                                      None] = None):
         self.embedding_layer = embedding_layer
-        self.Waa, self.Wax, self.ba = self._initWeights(dim_in, num_neurons)
+        self.Waa, self.Wax, self.ba = self._init_weights(dim_in, num_neurons)
         self.predict = predict
         if self.predict:
             self.bay = np.zeros((1, self.embedding_layer.W.shape[0]))
@@ -64,7 +64,9 @@ class RecurrentNeuralNetwork(Layer):
         self.costFunction = costFunction
         self.optim = optim()
 
-    def _initWeights(self, dim_in, num_neurons):
+    def _init_weights(
+            self, dim_in: int,
+            num_neurons: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         # rnn cell weights - produces activations of shape (M, num_neurons)
         ba = np.zeros((1, num_neurons))
         wax = np.random.randn(dim_in, num_neurons) * 0.01
