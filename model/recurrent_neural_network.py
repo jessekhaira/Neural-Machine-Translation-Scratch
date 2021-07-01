@@ -53,7 +53,7 @@ class RecurrentNeuralNetwork(Layer):
                  costFunction: Union[Callable[[np.ndarray, np.ndarray], float],
                                      None] = None):
         self.embedding_layer = embedding_layer
-        self.Waa, self.Wax, self.ba = self._init_weights(dim_in, num_neurons)
+        self.waa, self.wax, self.ba = self._init_weights(dim_in, num_neurons)
         self.predict = predict
         if self.predict:
             self.bay = np.zeros((1, self.embedding_layer.W.shape[0]))
@@ -130,7 +130,7 @@ class RecurrentNeuralNetwork(Layer):
         """
         # shape (M, num_neurons)
         a_prev = a_prev if a_prev is not None else np.zeros(
-            (x.shape[0], self.Waa.shape[0]))
+            (x.shape[0], self.waa.shape[0]))
         loss = 0
         for t in range(x.shape[1]):
             # get the sequence of vectors that occur specifically at this
@@ -145,7 +145,7 @@ class RecurrentNeuralNetwork(Layer):
 
             # Shape (M, num_neurons)
             activation_timestep = np.tanh(
-                curr_timestep_x.dot(self.Wax) + a_prev.dot(self.Waa) + self.ba)
+                curr_timestep_x.dot(self.wax) + a_prev.dot(self.waa) + self.ba)
 
             loss_t = None
             probabilities_t = None
@@ -266,9 +266,9 @@ class RecurrentNeuralNetwork(Layer):
             if t == 0:
                 to_encoder = d_activations_ahead
 
-        self.Waa, self.Wax, self.ba, self.bay = self.optim(
+        self.waa, self.wax, self.ba, self.bay = self.optim(
             learn_rate,
-            params=[self.Waa, self.Wax, self.ba, self.bay],
+            params=[self.waa, self.wax, self.ba, self.bay],
             dparams=[d_waa, d_wax, dba, dbay],
             grad_clip=True)
         self.embedding_layer.backward(dw_embed, learn_rate)
@@ -301,11 +301,11 @@ class RecurrentNeuralNetwork(Layer):
         dba_t = np.sum(dZ, axis=0)
 
         # Shape (m, num_neurons)
-        dActivations_behind = dZ.dot(self.Waa)
+        dActivations_behind = dZ.dot(self.waa)
 
         # For embedding layer
         # Shape (m, d_embed == num_neurons)
-        d_xembed = d_activations.dot(self.Wax.T)
+        d_xembed = d_activations.dot(self.wax.T)
 
         # let gradients flow unimpeded for pad vectors
         dActivations_behind[mask_t == False] = orig_dActivations[mask_t ==
@@ -315,8 +315,8 @@ class RecurrentNeuralNetwork(Layer):
 
     def _initGradients(self):
         dw_embed = np.zeros_like(self.embedding_layer.W)
-        d_waa = np.zeros_like(self.Waa)
-        d_wax = np.zeros_like(self.Wax)
+        d_waa = np.zeros_like(self.waa)
+        d_wax = np.zeros_like(self.wax)
         dba = np.zeros_like(self.ba)
         return dw_embed, d_waa, d_wax, dba
 
@@ -356,9 +356,9 @@ class RecurrentNeuralNetwork(Layer):
             d_wax += d_wax_t
             dba += dba_t
 
-        self.Waa, self.Wax, self.ba = self.optim(
+        self.waa, self.wax, self.ba = self.optim(
             learn_rate,
-            params=[self.Waa, self.Wax, self.ba],
+            params=[self.waa, self.wax, self.ba],
             dparams=[d_waa, d_wax, dba],
             grad_clip=True)
         self.embedding_layer.backward(dw_embed, learn_rate)
@@ -385,7 +385,7 @@ class RecurrentNeuralNetwork(Layer):
         """
         # only works for batch sizes of 1
         assert encoded.shape == (
-            1, self.Waa.shape[0]
+            1, self.waa.shape[0]
         ), "Your encoded vector produced by the encoder has to be of shape (1,num_neurons)!"
         # Array of length beam_width where array[i] = [[sequence of integers ending with eos], log_prob]
         candidate_solutions = []

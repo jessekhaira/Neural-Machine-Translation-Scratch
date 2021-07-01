@@ -75,7 +75,7 @@ class TestSeq2SeqRNN(unittest.TestCase):
 def show_param_norms(enc, dec, e):
 
     def getParams(obj):
-        waa, wax, ba = obj.rnn_cell.Waa, obj.rnn_cell.Wax, obj.rnn_cell.ba
+        waa, wax, ba = obj.rnn_cell.waa, obj.rnn_cell.wax, obj.rnn_cell.ba
         return waa, wax, ba
 
     def getNorms(obj):
