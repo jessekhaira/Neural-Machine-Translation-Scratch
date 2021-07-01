@@ -5,7 +5,7 @@ from model.embedding_layer import EmbeddingLayer
 from model.utils import softmax
 from collections import OrderedDict
 from collections import deque
-from typing import Union, Callable
+from typing import Union, Callable, Tuple
 import copy
 import numpy as np
 
@@ -71,7 +71,13 @@ class RecurrentNeuralNetwork(Layer):
         waa = np.random.randn(num_neurons, num_neurons) * 0.01
         return waa, wax, ba
 
-    def _forward(self, x, y=None, a_prev=None, mask=None):
+    def _forward(
+        self,
+        x: np.ndarray,
+        y: Union[np.ndarray, None] = None,
+        a_prev: Union[np.ndarray, None] = None,
+        mask: Union[np.ndarray, None] = None
+    ) -> Tuple[np.ndarray, float, np.ndarray]:
         """ This method carries out the forward pass through an RNN.
 
         Our padding idxs should not contribute to our loss, to our weight
@@ -184,7 +190,7 @@ class RecurrentNeuralNetwork(Layer):
         else:
             self._backwardNoPredict(learn_rate, gradient_ahead)
 
-    def _backward_predict(self, learn_rate):
+    def _backward_predict(self, learn_rate: float) -> np.ndarray:
         """ This method carries out the backward pass for a batched RNN
         cell that is predicting at every time step. As the RNN cell is
         unrolled for T timesteps in a batch, the gradients for the
