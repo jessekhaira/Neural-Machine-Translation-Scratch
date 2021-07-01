@@ -88,10 +88,10 @@ class Decoder(object):
         # Shape (M, T-1)
         x_matrix = target_language_seqs[:, :-1]
         y_matrix = target_language_seqs[:, 1:]
-        _, loss, _ = self.rnn_cell._forward(x=x_matrix,
-                                            y=y_matrix,
-                                            a_prev=encoded_batch,
-                                            mask=mask)
+        _, loss, _ = self.rnn_cell.forward(x=x_matrix,
+                                           y=y_matrix,
+                                           a_prev=encoded_batch,
+                                           mask=mask)
         return loss
 
     def _backward(self, learn_rate):

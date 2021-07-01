@@ -73,7 +73,7 @@ class RecurrentNeuralNetwork(Layer):
         waa = np.random.randn(num_neurons, num_neurons) * 0.01
         return waa, wax, ba
 
-    def _forward(
+    def forward(
         self,
         x: np.ndarray,
         y: Union[np.ndarray, None] = None,
@@ -137,7 +137,7 @@ class RecurrentNeuralNetwork(Layer):
             # time step, then process them all at one time
             pre_embedded_inp_t = x[:, t]
             # Shape (M, dim_in)
-            curr_timestep_x = self.embedding_layer._forward(pre_embedded_inp_t)
+            curr_timestep_x = self.embedding_layer.forward(pre_embedded_inp_t)
 
             curr_timestep_labels = None if y is None else y[:, t]
 
@@ -401,8 +401,8 @@ class RecurrentNeuralNetwork(Layer):
                 # single input at t== 0 of sos token
                 input_x_t = np.array([sos_int]).reshape(1, 1)
                 # Shape (1, dim_vocab)
-                probabilities, _, encoded = self._forward(x=input_x_t,
-                                                          a_prev=encoded)
+                probabilities, _, encoded = self.forward(x=input_x_t,
+                                                         a_prev=encoded)
                 # Shape (1, b)
                 # Get indices of where the b highest probabilities occur and get their corresponding probabilities
                 top_b_idxs = np.argsort(-probabilities)[:, :beam_width]
@@ -436,8 +436,8 @@ class RecurrentNeuralNetwork(Layer):
                     encoded.shape[0]
                 ) or encoded.shape[
                     0] == 1, "Shape mismatch! Your passing in an unequal number of input arguments compared to encoded arguments!"
-                probabilities, _, encoded = self._forward(x=input_x_t,
-                                                          a_prev=encoded)
+                probabilities, _, encoded = self.forward(x=input_x_t,
+                                                         a_prev=encoded)
 
                 # you don't just want the highest prob at this timestep - you want the highest prob words when
                 # considering all the log(probs) encountered at time 0,.., t-1 as well. So log the probabilities

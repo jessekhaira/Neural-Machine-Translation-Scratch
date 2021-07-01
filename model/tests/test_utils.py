@@ -57,7 +57,7 @@ class TestUtility(unittest.TestCase):
     def test_embed_forward(self):
         inp_seq = np.array([[3, 2, 1, 4, 0], [0, 0, 1, 1, 2]])
         obj = EmbeddingLayer(5, 3, GradientDescentMomentum)
-        output = obj._forward(inp_seq)
+        output = obj.forward(inp_seq)
         self.assertEqual(output.shape, (2, 5, 3))
 
 

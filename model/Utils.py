@@ -12,7 +12,7 @@ class Layer(ABC):
         pass
 
     @abstractmethod
-    def _forward(self):
+    def forward(self):
         pass
 
     @abstractmethod

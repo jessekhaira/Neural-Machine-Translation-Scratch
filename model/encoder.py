@@ -41,7 +41,7 @@ class Encoder(object):
         # Shape: (M, num_neurons_encoder) containing activations that
         # hopefully encode all the words in every sequence in the source
         # language well
-        _, _, encoded_matrix = self.rnn_cell._forward(x, mask=mask)
+        _, _, encoded_matrix = self.rnn_cell.forward(x, mask=mask)
         return encoded_matrix
 
     def _backward(self, da_encoded_vector, learn_rate):

@@ -94,8 +94,8 @@ class SequenceToSequenceRecurrentNetwork(object):
         self.eos_int = eos_int
         self.sos_int = sos_int
 
-    def _forward(self, x: np.ndarray, y: np.ndarray, mask_src: np.ndarray,
-                 mask_trg: np.ndarray) -> Tuple[float, np.ndarray]:
+    def forward(self, x: np.ndarray, y: np.ndarray, mask_src: np.ndarray,
+                mask_trg: np.ndarray) -> Tuple[float, np.ndarray]:
         """ This method computes the forward pass through the
         sequence to sequence model, producing a loss value and
         a predictions vector.
@@ -246,7 +246,7 @@ class SequenceToSequenceRecurrentNetwork(object):
                 mask_src = getMask(src_train, padding_idx)
                 mask_trg = getMask(trg_train, padding_idx)
 
-                loss = self._forward(src_train, trg_train, mask_src, mask_trg)
+                loss = self.forward(src_train, trg_train, mask_src, mask_trg)
                 self._backward(learn_rate)
                 epoch_loss.append(loss)
 
@@ -282,7 +282,7 @@ class SequenceToSequenceRecurrentNetwork(object):
                         print(f"Batch {i}, input_sentence: {input_sentence} " +
                               f"translated sentence: {predicted}")
 
-                    loss = self._forward(src_v, trg_v, mask_src_v, mask_trg_v)
+                    loss = self.forward(src_v, trg_v, mask_src_v, mask_trg_v)
                     batch_losses.append(loss)
 
                 validation_losses.append(

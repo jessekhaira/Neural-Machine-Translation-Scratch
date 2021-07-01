@@ -23,7 +23,7 @@ class EmbeddingLayer(Layer):
     def _initWeights(self):
         return np.random.randn(self.dim_in, self.embed_dim) * 0.01
 
-    def _forward(self, x):
+    def forward(self, x):
         # Implemented efficiently with embedding lookup - expects x to be (M,T)
         embedded_vectors = self.W[x, :]
         # Shape: (M, T, embed_dim) where M is size of batch, T is number of timesteps in a sequence, and embed_dim
