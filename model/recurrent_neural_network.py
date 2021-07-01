@@ -185,18 +185,22 @@ class RecurrentNeuralNetwork(Layer):
             self._backwardNoPredict(learn_rate, gradient_ahead)
 
     def _backward_predict(self, learn_rate):
-        """
-        This method carries out the backward pass for a batched RNN cell that is predicting at every time step.
-        As the RNN cell is unrolled for T timesteps in a batch, the gradients for the traininable parameters
-        have to be summed up over all the different timesteps. 
+        """ This method carries out the backward pass for a batched RNN
+        cell that is predicting at every time step. As the RNN cell is
+        unrolled for T timesteps in a batch, the gradients for the
+        traininable parameters have to be summed up over all the different
+        timesteps.
 
-        Used for the decoder in a seq2seq architecture. 
+        Used for the decoder in a seq2seq architecture.
 
-        Inputs:
-            -> learn_rate (int): Integer representing the learning rate for the parameters in this layer  
-        Outputs:
-            -> NumPy matrix of shape (M,num_neurons) containing gradients of the loss function wrt to the activations at
-            time step 0 
+        Args:
+            learn_rate:
+                Floating point value representing the learning rate for the
+                parameters in this layer
+
+        Returns:
+            NumPy array of shape (M, num_neurons) containing gradients of the
+            loss function with respect to the activations at time step 0
         """
         dW_embed, dWaa, dWax, dba = self._initGradients()
         dbay = np.zeros_like(self.bay)
