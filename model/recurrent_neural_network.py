@@ -186,7 +186,7 @@ class RecurrentNeuralNetwork(Layer):
         return probabilities_t, loss, self.time_cache[x.shape[1] -
                                                       1]["activation_timestep"]
 
-    def _backward(self, learn_rate, gradient_ahead=None):
+    def backward(self, learn_rate, gradient_ahead=None):
         if self.predict:
             return self._backward_predict(learn_rate)
         else:
@@ -210,10 +210,10 @@ class RecurrentNeuralNetwork(Layer):
             NumPy array of shape (M, num_neurons) containing gradients of the
             loss function with respect to the activations at time step 0
         """
-        dW_embed, dWaa, dWax, dba = self._initGradients()
+        dw_embed, d_waa, d_wax, dba = self._initGradients()
         dbay = np.zeros_like(self.bay)
-        dActivations_ahead = None
-        toEncoder = None
+        d_activations_ahead = None
+        to_encoder = None
         for t, v in reversed(self.time_cache.items()):
             predictions_t = v["probabilities_t"]
             activations_t = v["activation_timestep"]
@@ -226,76 +226,76 @@ class RecurrentNeuralNetwork(Layer):
                 mask_t)
             # dL/dZ for the softmax layer simply -> combines dL/dA and dA/dZ in one efficient step
             # Shape (M, dim_vocab)
-            dLogits = predictions_t
+            d_logits = predictions_t
             # Shape (m, dim_vocab)
-            dLogits[np.arange(dLogits.shape[0]), labels_t] -= 1
-            dLogits /= batch_size
+            d_logits[np.arange(d_logits.shape[0]), labels_t] -= 1
+            d_logits /= batch_size
 
             # apply the mask if mask
             # dont let gradients for padding vectors affect the weights or biases at all
             if mask_t is not None:
-                dLogits[mask_t == False] = 0
-            if dActivations_ahead is None:
-                dActivations_ahead = np.zeros_like(activations_t)
+                d_logits[mask_t == False] = 0
+            if d_activations_ahead is None:
+                d_activations_ahead = np.zeros_like(activations_t)
             # Shape (dim_vocab, dim_embed)
-            dW_embed_softmax = dLogits.T.dot(activations_t)
+            d_wembed_softmax = d_logits.T.dot(activations_t)
             # Shape (1, dim_vocab)
-            dbay_t = np.sum(dLogits, axis=0)
+            dbay_t = np.sum(d_logits, axis=0)
 
             # -- ENTERING RNN CELL--
             # Shape (m, num_neurons == d_embed)
-            dActivations = dLogits.dot(self.embedding_layer.W)
+            d_activations = d_logits.dot(self.embedding_layer.W)
             # activations are used in two places - the next time step and for the softmax so
             # the total total activation gradient is the sum of the two
-            dActivations += dActivations_ahead
+            d_activations += d_activations_ahead
 
-            dX_embed, dWaa_t, dWax_t, dba_t, dActivations_ahead = self._getRnnGradients(
-                dActivations=dActivations,
+            d_xembed, d_waa_t, d_wax_t, dba_t, d_activations_ahead = self._getRnnGradients(
+                d_activations=d_activations,
                 activations_t=activations_t,
                 x_t=x_t,
                 pre_embedded_inp_t=pre_embedded_inp_t)
             ## Sum up all gradients over every timestep
-            np.add.at(dW_embed, pre_embedded_inp_t, dX_embed)
-            dW_embed += dW_embed_softmax
+            np.add.at(dw_embed, pre_embedded_inp_t, d_xembed)
+            dw_embed += d_wembed_softmax
 
-            dWaa += dWaa_t
-            dWax += dWax_t
+            d_waa += d_waa_t
+            d_wax += d_wax_t
             dba += dba_t
             dbay += dbay_t
 
             if t == 0:
-                toEncoder = dActivations_ahead
+                to_encoder = d_activations_ahead
 
         self.Waa, self.Wax, self.ba, self.bay = self.optim(
             learn_rate,
             params=[self.Waa, self.Wax, self.ba, self.bay],
-            dparams=[dWaa, dWax, dba, dbay],
+            dparams=[d_waa, d_wax, dba, dbay],
             grad_clip=True)
-        self.embedding_layer._backward(dW_embed, learn_rate)
+        self.embedding_layer.backward(dw_embed, learn_rate)
 
-        return toEncoder
+        return to_encoder
 
     def _getRnnGradients(self,
-                         dActivations,
+                         d_activations,
                          activations_t,
                          x_t,
                          pre_embedded_inp_t,
                          mask_t=None):
         # for padding vectors, don't update parameters
-        # and for dActivations_behind, let the gradients from the original dActivations
+        # and for dActivations_behind, let the gradients from the original d_activations
         # flow unimpeded for pad vectors
-        orig_dActivations = copy.copy(dActivations)
+        orig_dActivations = copy.copy(d_activations)
         if mask_t is not None:
-            dActivations[mask_t == False] = 0
+            d_activations[mask_t == False] = 0
 
         # backprop through tanh activation to get dL/dZ, applied elementwise over dL/dA
         # Shape (M, num_neurons)
-        dZ = (1 - activations_t * activations_t) * dActivations
+        dZ = (1 - activations_t * activations_t) * d_activations
 
         # Shape (num_neurons, num_neurons)
-        dWaa_t = activations_t.T.dot(dZ)
+        d_waa_t = activations_t.T.dot(dZ)
         # Shape (dim_in, num_neurons)
-        dWax_t = x_t.T.dot(dZ)
+        d_wax_t = x_t.T.dot(dZ)
 
         # Shape (1, num_neurons)
         dba_t = np.sum(dZ, axis=0)
@@ -305,22 +305,22 @@ class RecurrentNeuralNetwork(Layer):
 
         # For embedding layer
         # Shape (m, d_embed == num_neurons)
-        dX_embed = dActivations.dot(self.Wax.T)
+        d_xembed = d_activations.dot(self.Wax.T)
 
         # let gradients flow unimpeded for pad vectors
         dActivations_behind[mask_t == False] = orig_dActivations[mask_t ==
                                                                  False]
 
-        return dX_embed, dWaa_t, dWax_t, dba_t, dActivations_behind
+        return d_xembed, d_waa_t, d_wax_t, dba_t, dActivations_behind
 
     def _initGradients(self):
-        dW_embed = np.zeros_like(self.embedding_layer.W)
-        dWaa = np.zeros_like(self.Waa)
-        dWax = np.zeros_like(self.Wax)
+        dw_embed = np.zeros_like(self.embedding_layer.W)
+        d_waa = np.zeros_like(self.Waa)
+        d_wax = np.zeros_like(self.Wax)
         dba = np.zeros_like(self.ba)
-        return dW_embed, dWaa, dWax, dba
+        return dw_embed, d_waa, d_wax, dba
 
-    def _backwardNoPredict(self, learn_rate, dActivations):
+    def _backwardNoPredict(self, learn_rate, d_activations):
         """
         This method carries out the backward pass for a batched RNN cell not predicting at every timestep.
         As the RNN cell is unrolled for T timesteps in a batch, the gradients for the traininable parameters 
@@ -335,7 +335,7 @@ class RecurrentNeuralNetwork(Layer):
         Outputs:
             -> None 
         """
-        dW_embed, dWaa, dWax, dba = self._initGradients()
+        dw_embed, d_waa, d_wax, dba = self._initGradients()
         # backprop through time!
         for t, v in reversed(self.time_cache.items()):
             predictions_t = v["probabilities_t"]
@@ -344,24 +344,24 @@ class RecurrentNeuralNetwork(Layer):
             pre_embedded_inp_t = v["pre_embedded_inp_t"]
             mask_t = v["mask_t"]
 
-            dX_embed, dWaa_t, dWax_t, dba_t, dActivations = self._getRnnGradients(
-                dActivations=dActivations,
+            d_xembed, d_waa_t, d_wax_t, dba_t, d_activations = self._getRnnGradients(
+                d_activations=d_activations,
                 activations_t=activations_t,
                 x_t=x_t,
                 pre_embedded_inp_t=pre_embedded_inp_t,
                 mask_t=mask_t)
             ## Sum up all gradients over every timestep
-            np.add.at(dW_embed, pre_embedded_inp_t, dX_embed)
-            dWaa += dWaa_t
-            dWax += dWax_t
+            np.add.at(dw_embed, pre_embedded_inp_t, d_xembed)
+            d_waa += d_waa_t
+            d_wax += d_wax_t
             dba += dba_t
 
         self.Waa, self.Wax, self.ba = self.optim(
             learn_rate,
             params=[self.Waa, self.Wax, self.ba],
-            dparams=[dWaa, dWax, dba],
+            dparams=[d_waa, d_wax, dba],
             grad_clip=True)
-        self.embedding_layer._backward(dW_embed, learn_rate)
+        self.embedding_layer.backward(dw_embed, learn_rate)
 
     def _beamSearch(self, encoded, eos_int, sos_int, length_normalization,
                     beam_width, max_seq_len):

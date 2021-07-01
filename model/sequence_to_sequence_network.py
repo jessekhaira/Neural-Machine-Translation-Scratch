@@ -132,13 +132,13 @@ class SequenceToSequenceRecurrentNetwork(object):
         loss = self.decoder(encoded_batch, y, mask_trg)
         return loss
 
-    def _backward(self, learn_rate: float):
+    def backward(self, learn_rate: float):
         """ This method computes the backward pass through the network.
         """
         # vector containing the gradient dL/dA for the encoded vector
         # produced at last time step for encoder
-        da_encoded_vector = self.decoder._backward(learn_rate)
-        self.encoder._backward(da_encoded_vector, learn_rate)
+        da_encoded_vector = self.decoder.backward(learn_rate)
+        self.encoder.backward(da_encoded_vector, learn_rate)
 
     def train(
             self,
@@ -247,7 +247,7 @@ class SequenceToSequenceRecurrentNetwork(object):
                 mask_trg = getMask(trg_train, padding_idx)
 
                 loss = self.forward(src_train, trg_train, mask_src, mask_trg)
-                self._backward(learn_rate)
+                self.backward(learn_rate)
                 epoch_loss.append(loss)
 
             # smoothen the loss out when training

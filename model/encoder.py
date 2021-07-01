@@ -44,7 +44,7 @@ class Encoder(object):
         _, _, encoded_matrix = self.rnn_cell.forward(x, mask=mask)
         return encoded_matrix
 
-    def _backward(self, da_encoded_vector, learn_rate):
+    def backward(self, da_encoded_vector, learn_rate):
         # Shape: (M, dim_embed_src)
-        self.rnn_cell._backward(gradient_ahead=da_encoded_vector,
-                                learn_rate=learn_rate)
+        self.rnn_cell.backward(gradient_ahead=da_encoded_vector,
+                               learn_rate=learn_rate)

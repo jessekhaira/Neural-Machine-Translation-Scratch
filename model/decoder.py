@@ -94,8 +94,8 @@ class Decoder(object):
                                            mask=mask)
         return loss
 
-    def _backward(self, learn_rate):
-        dencoded_batch = self.rnn_cell._backward(learn_rate=learn_rate)
+    def backward(self, learn_rate):
+        dencoded_batch = self.rnn_cell.backward(learn_rate=learn_rate)
         return dencoded_batch
 
     def beamSearch(self, encoded, eos_int, sos_int, length_normalization,

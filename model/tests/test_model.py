@@ -63,7 +63,7 @@ class TestSeq2SeqRNN(unittest.TestCase):
                 learn_rate = 0.005
             lossVal = obj2.forward(source_data, target_data, mask_src, mask_trg)
             lossVal = objLoss(lossVal)
-            obj2._backward(learn_rate)
+            obj2.backward(learn_rate)
             output = obj2.predict(inp_seq)
             print(lossVal)
             print(output)

@@ -16,7 +16,7 @@ class Layer(ABC):
         pass
 
     @abstractmethod
-    def _backward(self):
+    def backward(self):
         pass
 
 

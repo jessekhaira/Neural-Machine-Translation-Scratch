@@ -42,7 +42,7 @@ class EmbeddingLayer(Layer):
         logits = x.dot(self.W.T) + bay
         return logits
 
-    def _backward(self, dW, learn_rate):
+    def backward(self, dW, learn_rate):
         """
         Update weights with dW
         """
