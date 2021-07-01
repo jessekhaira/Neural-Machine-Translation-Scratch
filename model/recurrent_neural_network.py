@@ -4,7 +4,6 @@ from model.utils import Layer
 from model.embedding_layer import EmbeddingLayer
 from model.utils import softmax
 from collections import OrderedDict
-from collections import deque
 from typing import Union, Callable, Tuple
 import copy
 import numpy as np
