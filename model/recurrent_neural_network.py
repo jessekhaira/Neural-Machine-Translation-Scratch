@@ -251,7 +251,7 @@ class RecurrentNeuralNetwork(Layer):
             # the two
             d_activations += d_activations_ahead
 
-            d_xembed, d_waa_t, d_wax_t, dba_t, d_activations_ahead = self._getRnnGradients(
+            d_xembed, d_waa_t, d_wax_t, dba_t, d_activations_ahead = self._get_rnn_gradients(
                 d_activations=d_activations,
                 activations_t=activations_t,
                 x_t=x_t,
@@ -277,12 +277,12 @@ class RecurrentNeuralNetwork(Layer):
 
         return to_encoder
 
-    def _getRnnGradients(self,
-                         d_activations,
-                         activations_t,
-                         x_t,
-                         pre_embedded_inp_t,
-                         mask_t=None):
+    def _get_rnn_gradients(self,
+                           d_activations,
+                           activations_t,
+                           x_t,
+                           pre_embedded_inp_t,
+                           mask_t=None):
         # for padding vectors, don't update parameters
         # and for dActivations_behind, let the gradients from the original d_activations
         # flow unimpeded for pad vectors
@@ -346,7 +346,7 @@ class RecurrentNeuralNetwork(Layer):
             pre_embedded_inp_t = v["pre_embedded_inp_t"]
             mask_t = v["mask_t"]
 
-            d_xembed, d_waa_t, d_wax_t, dba_t, d_activations = self._getRnnGradients(
+            d_xembed, d_waa_t, d_wax_t, dba_t, d_activations = self._get_rnn_gradients(
                 d_activations=d_activations,
                 activations_t=activations_t,
                 x_t=x_t,
