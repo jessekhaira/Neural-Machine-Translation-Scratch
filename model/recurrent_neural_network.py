@@ -223,7 +223,8 @@ class RecurrentNeuralNetwork(Layer):
             # batch size shouldn't include vectors that are padding
             batch_size = predictions_t.shape[0] if mask_t is None else np.sum(
                 mask_t)
-            # dL/dZ for the softmax layer simply -> combines dL/dA and dA/dZ in one efficient step
+            # dL/dZ for the softmax layer simply -> combines dL/dA and dA/dZ in
+            # one efficient step
             # Shape (M, dim_vocab)
             d_logits = predictions_t
             # Shape (m, dim_vocab)
@@ -231,7 +232,8 @@ class RecurrentNeuralNetwork(Layer):
             d_logits /= batch_size
 
             # apply the mask if mask
-            # dont let gradients for padding vectors affect the weights or biases at all
+            # dont let gradients for padding vectors affect the weights or
+            # biases at all
             if mask_t is not None:
                 d_logits[mask_t == False] = 0
             if d_activations_ahead is None:
@@ -244,8 +246,9 @@ class RecurrentNeuralNetwork(Layer):
             # -- ENTERING RNN CELL--
             # Shape (m, num_neurons == d_embed)
             d_activations = d_logits.dot(self.embedding_layer.W)
-            # activations are used in two places - the next time step and for the softmax so
-            # the total total activation gradient is the sum of the two
+            # activations are used in two places - the next time step and for
+            # the softmax so the total total activation gradient is the sum of
+            # the two
             d_activations += d_activations_ahead
 
             d_xembed, d_waa_t, d_wax_t, dba_t, d_activations_ahead = self._getRnnGradients(
