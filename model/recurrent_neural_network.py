@@ -189,7 +189,7 @@ class RecurrentNeuralNetwork(Layer):
         if self.predict:
             return self._backward_predict(learn_rate)
         else:
-            self._backwardNoPredict(learn_rate, gradient_ahead)
+            self._backward_no_predict(learn_rate, gradient_ahead)
 
     def _backward_predict(self, learn_rate: float) -> np.ndarray:
         """ This method carries out the backward pass for a batched RNN
@@ -323,25 +323,27 @@ class RecurrentNeuralNetwork(Layer):
         dba = np.zeros_like(self.ba)
         return dw_embed, d_waa, d_wax, dba
 
-    def _backwardNoPredict(self, learn_rate, d_activations):
-        """
-        This method carries out the backward pass for a batched RNN cell not predicting at every timestep.
-        As the RNN cell is unrolled for T timesteps in a batch, the gradients for the traininable parameters 
-        have to be summed up over all the different timesteps. 
+    def _backward_no_predict(self, learn_rate: float,
+                             d_activations: np.ndarray) -> None:
+        """ This method carries out the backward pass for a batched RNN cell
+        not predicting at every timestep. As the RNN cell is unrolled for T
+        timesteps in a batch, the gradients for the traininable parameters
+        have to be summed up over all the different timesteps.
 
-        Used for the encoder in a seq2seq architecture. 
+        Used for the encoder in a seq2seq architecture.
 
-        Inputs:
-            -> learn_rate (int): Integer representing the learning rate for the parameters in this layer
-            -> gradient_ahead (NumPy Matrix): Matrix containing the gradients of the cost function wrt to the activations
-            produced at the last time in the rnn cell    
-        Outputs:
-            -> None 
+        Args:
+            learn_rate:
+                Floating point value representing the learning rate for the
+                parameters in this layer
+
+            gradient_ahead:
+                Numpy array containing the gradients of the cost function wrt
+                to the activations produced at the last time in the rnn cell
         """
         dw_embed, d_waa, d_wax, dba = self._init_gradients()
         # backprop through time!
-        for t, v in reversed(self.time_cache.items()):
-            predictions_t = v["probabilities_t"]
+        for _, v in reversed(self.time_cache.items()):
             activations_t = v["activation_timestep"]
             x_t = v["inputs_t"]
             pre_embedded_inp_t = v["pre_embedded_inp_t"]
