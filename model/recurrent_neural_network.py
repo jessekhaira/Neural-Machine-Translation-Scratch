@@ -209,7 +209,7 @@ class RecurrentNeuralNetwork(Layer):
             NumPy array of shape (M, num_neurons) containing gradients of the
             loss function with respect to the activations at time step 0
         """
-        dw_embed, d_waa, d_wax, dba = self._initGradients()
+        dw_embed, d_waa, d_wax, dba = self._init_gradients()
         dbay = np.zeros_like(self.bay)
         d_activations_ahead = None
         to_encoder = None
@@ -223,7 +223,7 @@ class RecurrentNeuralNetwork(Layer):
             # batch size shouldn't include vectors that are padding
             batch_size = predictions_t.shape[0] if mask_t is None else np.sum(
                 mask_t)
-            # dL/dZ for the softmax layer simply -> combines dL/dA and dA/dZ in
+            # dL/dz for the softmax layer simply -> combines dL/dA and dA/dz in
             # one efficient step
             # Shape (M, dim_vocab)
             d_logits = predictions_t
@@ -284,38 +284,39 @@ class RecurrentNeuralNetwork(Layer):
                            pre_embedded_inp_t,
                            mask_t=None):
         # for padding vectors, don't update parameters
-        # and for dActivations_behind, let the gradients from the original d_activations
-        # flow unimpeded for pad vectors
-        orig_dActivations = copy.copy(d_activations)
+        # and for dactivations_behind, let the gradients from the
+        # original d_activations flow unimpeded for pad vectors
+        orig_dactivations = copy.copy(d_activations)
         if mask_t is not None:
             d_activations[mask_t == False] = 0
 
-        # backprop through tanh activation to get dL/dZ, applied elementwise over dL/dA
+        # backprop through tanh activation to get dL/dz, applied
+        # elementwise over dL/dA
         # Shape (M, num_neurons)
-        dZ = (1 - activations_t * activations_t) * d_activations
+        dz = (1 - activations_t * activations_t) * d_activations
 
         # Shape (num_neurons, num_neurons)
-        d_waa_t = activations_t.T.dot(dZ)
+        d_waa_t = activations_t.T.dot(dz)
         # Shape (dim_in, num_neurons)
-        d_wax_t = x_t.T.dot(dZ)
+        d_wax_t = x_t.T.dot(dz)
 
         # Shape (1, num_neurons)
-        dba_t = np.sum(dZ, axis=0)
+        dba_t = np.sum(dz, axis=0)
 
         # Shape (m, num_neurons)
-        dActivations_behind = dZ.dot(self.waa)
+        dactivations_behind = dz.dot(self.waa)
 
         # For embedding layer
         # Shape (m, d_embed == num_neurons)
         d_xembed = d_activations.dot(self.wax.T)
 
         # let gradients flow unimpeded for pad vectors
-        dActivations_behind[mask_t == False] = orig_dActivations[mask_t ==
+        dactivations_behind[mask_t == False] = orig_dactivations[mask_t ==
                                                                  False]
 
-        return d_xembed, d_waa_t, d_wax_t, dba_t, dActivations_behind
+        return d_xembed, d_waa_t, d_wax_t, dba_t, dactivations_behind
 
-    def _initGradients(self):
+    def _init_gradients(self):
         dw_embed = np.zeros_like(self.embedding_layer.W)
         d_waa = np.zeros_like(self.waa)
         d_wax = np.zeros_like(self.wax)
@@ -337,7 +338,7 @@ class RecurrentNeuralNetwork(Layer):
         Outputs:
             -> None 
         """
-        dw_embed, d_waa, d_wax, dba = self._initGradients()
+        dw_embed, d_waa, d_wax, dba = self._init_gradients()
         # backprop through time!
         for t, v in reversed(self.time_cache.items()):
             predictions_t = v["probabilities_t"]
