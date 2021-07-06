@@ -61,11 +61,12 @@ class TestSeq2SeqRNN(unittest.TestCase):
                 learn_rate = 0.01
             elif test_epoch > 1200 and test_epoch < 1700:
                 learn_rate = 0.005
-            lossVal = obj2.forward(source_data, target_data, mask_src, mask_trg)
-            lossVal = objLoss(lossVal)
+            loss_val = obj2.forward(source_data, target_data, mask_src,
+                                    mask_trg)
+            loss_val = objLoss(loss_val)
             obj2.backward(learn_rate)
             output = obj2.predict(inp_seq)
-            print(lossVal)
+            print(loss_val)
             print(output)
             print(test_epoch)
             if test_epoch % 1000 == 0:
