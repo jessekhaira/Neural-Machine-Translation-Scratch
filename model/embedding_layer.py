@@ -26,12 +26,13 @@ class EmbeddingLayer(Layer):
     def forward(self, x):
         # Implemented efficiently with embedding lookup - expects x to be (M,T)
         embedded_vectors = self.W[x, :]
-        # Shape: (M, T, embed_dim) where M is size of batch, T is number of timesteps in a sequence, and embed_dim
-        # is the dimension the vectors are embedded to
+        # Shape: (M, T, embed_dim) where M is size of batch, T is number of
+        # timesteps in a sequence, and embed_dim is the dimension the
+        # vectors are embedded to
         self.x_inp = x
         return embedded_vectors
 
-    def _weightTied_Softmax(self, x, bay):
+    def weight_tied_softmax(self, x, bay):
         """
         Method is used when the weights of this layer are tied with the
         softmax function in a model.

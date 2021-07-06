@@ -150,7 +150,7 @@ class RecurrentNeuralNetwork(Layer):
             probabilities_t = None
             if self.predict:
                 # Shape (M, d_vocab)
-                logits = self.embedding_layer._weightTied_Softmax(
+                logits = self.embedding_layer.weight_tied_softmax(
                     activation_timestep, self.bay)
                 # Shape (M, d_vocab)
                 probabilities_t = softmax(logits)
