@@ -185,7 +185,10 @@ class RecurrentNeuralNetwork(Layer):
         return probabilities_t, loss, self.time_cache[x.shape[1] -
                                                       1]["activation_timestep"]
 
-    def backward(self, learn_rate, gradient_ahead=None):
+    def backward(self,
+                 learn_rate: float,
+                 gradient_ahead: Union[np.ndarray,
+                                       None] = None) -> Union[None, np.ndarray]:
         if self.predict:
             return self._backward_predict(learn_rate)
         else:
