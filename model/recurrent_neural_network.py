@@ -277,12 +277,14 @@ class RecurrentNeuralNetwork(Layer):
 
         return to_encoder
 
-    def _get_rnn_gradients(self,
-                           d_activations,
-                           activations_t,
-                           x_t,
-                           pre_embedded_inp_t,
-                           mask_t=None):
+    def _get_rnn_gradients(
+        self,
+        d_activations: np.ndarray,
+        activations_t: np.ndarray,
+        x_t: np.ndarray,
+        pre_embedded_inp_t: np.ndarray,
+        mask_t: Union[np.ndarray, None] = None
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         # for padding vectors, don't update parameters
         # and for dactivations_behind, let the gradients from the
         # original d_activations flow unimpeded for pad vectors
