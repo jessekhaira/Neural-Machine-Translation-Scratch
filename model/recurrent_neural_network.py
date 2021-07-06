@@ -166,7 +166,7 @@ class RecurrentNeuralNetwork(Layer):
 
             # In our get_mask function, we have vector != padding_idx, so if a
             # value is False, that means its a padding vector
-            if curr_mask is not None:
+            if curr_mask:
                 activation_timestep[curr_mask == False, :] = a_prev[curr_mask ==
                                                                     False, :]
 
