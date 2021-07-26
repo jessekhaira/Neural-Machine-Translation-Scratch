@@ -1,3 +1,5 @@
+""" This module contains code for a class that represents an
+embedding layer """
 from model.utils import Layer
 import numpy as np
 
