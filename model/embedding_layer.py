@@ -3,15 +3,21 @@ import numpy as np
 
 
 class EmbeddingLayer(Layer):
-    """
-    This class represents an embedding layer. The purpose of the layer is to transport
-    vectors from a vector space V to a vector space W through a linear transformation 
-    by a weight matrix, where vector space W has a much lower dimensionality then vector space V. 
+    """ This class represents an embedding layer. The purpose of
+    the layer is to transport vectors from a vector space V to a
+    vector space W through a linear transformation by a weight
+    matrix, where vector space W has a much lower dimensionality
+    then vector space V. 
 
-    Inputs:
-        -> dim_in (int): Integer representing the dimensionality of the input vector space
-        -> embed_dim (int): Integer representing the dimensionality of the embedded vector space
-        -> optim (Class): Class representing an optimization algorithm 
+    Attributes:
+        dim_in:
+            Integer representing the dimensionality of the input vector space
+
+        embed_dim:
+            Integer representing the dimensionality of the embedded vector space
+
+        optim:
+            Object representing an optimization algorithm 
     """
 
     def __init__(self, dim_in, embed_dim, optim):

@@ -1,6 +1,6 @@
-""" This module contains code for a class that represents the encoder
-algorithm meant to be used within a sequence to sequence network for
-machine translation """
+""" This module contains code for a class that represents a encoder
+algorithm, which is specifically meant to be used within a sequence
+to sequence network for machine translation """
 from model.embedding_layer import EmbeddingLayer
 from model.recurrent_neural_network import RecurrentNeuralNetwork
 
