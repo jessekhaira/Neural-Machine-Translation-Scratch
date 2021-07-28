@@ -40,7 +40,7 @@ class EmbeddingLayer(Layer):
         self.x_inp = x
         return embedded_vectors
 
-    def weight_tied_softmax(self, x, bay):
+    def weight_tied_softmax(self, x: np.ndarray, bay: np.ndarray) -> np.ndarray:
         """ Method is used when the weights of this layer are tied with the
         softmax function in a model.
         """
@@ -50,7 +50,7 @@ class EmbeddingLayer(Layer):
         logits = x.dot(self.W.T) + bay
         return logits
 
-    def backward(self, dW, learn_rate):
+    def backward(self, dW: np.ndarray, learn_rate: float) -> None:
         """ Update weights with dW
         """
         self.W = self.optim(learn_rate, [self.W], [dW])
