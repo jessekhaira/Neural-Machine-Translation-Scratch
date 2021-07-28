@@ -33,7 +33,7 @@ class EmbeddingLayer(Layer):
 
     def forward(self, x):
         # Implemented efficiently with embedding lookup - expects x to be (M,T)
-        embedded_vectors =self.w[x, :]
+        embedded_vectors = self.w[x, :]
         # Shape: (M, T, embed_dim) where M is size of batch, T is number of
         # timesteps in a sequence, and embed_dim is the dimension the
         # vectors are embedded to
@@ -51,6 +51,5 @@ class EmbeddingLayer(Layer):
         return logits
 
     def backward(self, dW: np.ndarray, learn_rate: float) -> None:
-        """ Update weights with dW
-        """
-       self.w = self.optim(learn_rate, [self.W], [dW])
+        """ Update weights with dW """
+        self.w = self.optim(learn_rate, [self.W], [dW])
